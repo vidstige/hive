@@ -15,10 +15,10 @@ def neighbours(c):
 class Player(object):
     hand = {
         'queen': 1,
-        'spiders': 2,
-        'beetles': 2,
-        'ants': 3,
-        'grasshoppers': 3,
+        'spider': 2,
+        'beetle': 2,
+        'ant': 3,
+        'grasshopper': 3,
     }
     def __init__(self, name):
         self.name = name
@@ -63,10 +63,21 @@ def placeable(grid):
             players[player].add(n)
     print(players)
 
+def enumerate_hand(player, coordinates):
+    """Fora given iterable of coordinates, enumerate all avilable tiles"""
+    for tile, count in player.hand.items():
+        if count > 0:
+            for c in coordinates:
+                yield ('place', tile, c)
+
 def available_moves(state):
-    # If nothing is placed, one must place something
     if not state.grid:
-        return [('place', 'queen', (0, 0, 0))]
+        # If nothing is placed, one must place something
+        return enumerate_hand(state.player(), [(0, 0, 0)])
+    if len(state.grid) == 1:
+        # If single tile is placed, opponent places at neighbour
+        start_tile = next(iter(state.grid))
+        return enumerate_hand(state.player(), neighbours(start_tile))
     for p in placeable(state.grid):
         print(p)
     return []
@@ -76,7 +87,8 @@ def main():
     while not game_over(state):
         for player in state.players:
             print("Player {}".format(player.name))
-            move = random.choice(available_moves(state))
+            move = random.choice(list(available_moves(state)))
+            print(list(available_moves(state)))
             state.do(move)
 
 main()
