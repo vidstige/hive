@@ -30,14 +30,14 @@ class State(object):
     """Game state"""
     # cube hex grid x+y+z=0
     grid = {}
-    tile = 0  # round
+    move_number = 0
     players = (Player('white'), Player('black'))
 
     def round(self):
-        return self.tile // 2
+        return self.move_number // 2
 
     def player(self):
-        return self.players[self.tile % len(self.players)]
+        return self.players[self.move_number % len(self.players)]
 
     def do(self, move):
         player = self.player()
@@ -48,20 +48,32 @@ class State(object):
         if action == 'move':
             pass
 
-        self.tile += 1
+        self.move_number += 1
 
 def game_over(state):
     return state.round() > 3
 
-def placeable(grid):
+def placeable(state):
     """Returns all coordinates where the given player can
     _place_ a tile."""
     players = defaultdict(set)
-    for coordinate, value in grid.items():
+    for coordinate, value in state.grid.items():
         player, _ = value
         for n in neighbours(coordinate):
             players[player].add(n)
-    print(players)
+    # All neighbours to any tile placed by current player...
+    coordinates = players[state.player()]
+    # ...except where the opponent is neighbour...
+    for p in players:
+        if p != state.player():
+            coordinates.difference_update(players[p])
+    # ...and you cannot place on top of another tile.
+    coordinates.difference_update(state.grid.keys())
+
+    return coordinates
+
+def movements():
+    return []
 
 def enumerate_hand(player, coordinates):
     """Fora given iterable of coordinates, enumerate all avilable tiles"""
@@ -78,9 +90,9 @@ def available_moves(state):
         # If single tile is placed, opponent places at neighbour
         start_tile = next(iter(state.grid))
         return enumerate_hand(state.player(), neighbours(start_tile))
-    for p in placeable(state.grid):
-        print(p)
-    return []
+    placements = enumerate_hand(state.player(), placeable(state))
+    return list(placements) + movements()
+
 
 def main():
     state = State()
@@ -88,7 +100,7 @@ def main():
         for player in state.players:
             print("Player {}".format(player.name))
             move = random.choice(list(available_moves(state)))
-            print(list(available_moves(state)))
+            print("  ", move)
             state.do(move)
 
 main()
