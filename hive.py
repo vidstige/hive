@@ -12,13 +12,31 @@ def neighbours(c):
     for ox, oy,oz in offsets:
         yield x + ox, y + oy, z + oz
 
+class Tile(object):
+    name = None
+
+class Queen(Tile):
+    name = 'queen'
+    
+class Spider(Tile):
+    name = 'spider'
+
+class Beetle(Tile):
+    name = 'beetle'
+
+class Ant(Tile):
+    name = 'ant'
+
+class Grasshopper(Tile):
+    name = 'grasshopper'
+
 class Player(object):
     hand = {
-        'queen': 1,
-        'spider': 2,
-        'beetle': 2,
-        'ant': 3,
-        'grasshopper': 3,
+        Queen: 1,
+        Spider: 2,
+        Beetle: 2,
+        Ant: 3,
+        Grasshopper: 3,
     }
     def __init__(self, name):
         self.name = name
@@ -41,12 +59,14 @@ class State(object):
 
     def do(self, move):
         player = self.player()
-        action, tile, coordinate = move
+        action, arg1, arg2 = move
         if action == 'place':
+            tile, coordinate = arg1, arg2
             self.grid[coordinate] = player, tile
             player.hand[tile] -= 1
         elif action == 'move':
-            pass
+            value = self.grid.pop(arg1)
+            self.grid[arg2] = value
         else:
             print("UNKNOWN MOVE")
 
@@ -92,7 +112,8 @@ def movements(state):
             coordinates = set(state.grid.keys())
             coordinates.remove(coordinate)
             if one_hive(coordinates):
-                yield ('move', coordinate, None)
+                # TODO: Actual move (third argument)
+                yield ('move', coordinate, coordinate)
 
 def enumerate_hand(player, coordinates):
     """Fora given iterable of coordinates, enumerate all avilable tiles"""
