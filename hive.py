@@ -45,8 +45,10 @@ class State(object):
         if action == 'place':
             self.grid[coordinate] = player, tile
             player.hand[tile] -= 1
-        if action == 'move':
+        elif action == 'move':
             pass
+        else:
+            print("UNKNOWN MOVE")
 
         self.move_number += 1
 
@@ -72,8 +74,25 @@ def placeable(state):
 
     return coordinates
 
-def movements():
-    return []
+def one_hive(coordinates):
+    unvisited = set(coordinates)
+    todo = [unvisited.pop()]
+    while todo:
+        node = todo.pop()
+        for neighbour in neighbours(node):
+            if neighbour in unvisited:
+                unvisited.remove(neighbour)
+                todo.append(neighbour)
+    return not unvisited
+
+def movements(state):
+    for coordinate, value in state.grid.items():
+        player, _ = value
+        if player == state.player():
+            coordinates = set(state.grid.keys())
+            coordinates.remove(coordinate)
+            if one_hive(coordinates):
+                yield ('move', coordinate, None)
 
 def enumerate_hand(player, coordinates):
     """Fora given iterable of coordinates, enumerate all avilable tiles"""
@@ -84,14 +103,15 @@ def enumerate_hand(player, coordinates):
 
 def available_moves(state):
     if not state.grid:
-        # If nothing is placed, one must place something
-        return enumerate_hand(state.player(), [(0, 0, 0)])
+        # If nothing is placed, one must place something anywhere
+        anywhere = (0, 0, 0)
+        return enumerate_hand(state.player(), [anywhere])
     if len(state.grid) == 1:
         # If single tile is placed, opponent places at neighbour
         start_tile = next(iter(state.grid))
         return enumerate_hand(state.player(), neighbours(start_tile))
     placements = enumerate_hand(state.player(), placeable(state))
-    return list(placements) + movements()
+    return list(placements) + list(movements(state))
 
 
 def main():
