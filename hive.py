@@ -21,8 +21,10 @@ class Tile(object):
 
 class Queen(Tile):
     name = 'queen'
-    #def moves(self, coordinate, state):
-    #    return
+    def moves(self, coordinate, state):
+        for neighbour in neighbours(coordinate):
+            if neighbour not in state.grid:
+                yield neighbour
     
 class Spider(Tile):
     name = 'spider'
@@ -144,7 +146,9 @@ def available_moves(state):
         start_tile = next(iter(state.grid))
         return enumerate_hand(state.player(), neighbours(start_tile))
     placements = enumerate_hand(state.player(), placeable(state))
-    return list(placements) + list(movements(state))
+    tmp = list(movements(state))
+    print(tmp)
+    return list(placements) + tmp
 
 
 def main():
