@@ -15,14 +15,14 @@ def neighbours(c):
 class Tile(object):
     name = None
     def moves(self, coordinate, state):
-        return None
+        return iter(())
     def __repr__(self):
         return "{}()".format(self.__class__.__name__)
 
 class Queen(Tile):
     name = 'queen'
-    def moves(self, coordinate, state):
-        return
+    #def moves(self, coordinate, state):
+    #    return
     
 class Spider(Tile):
     name = 'spider'
@@ -119,13 +119,13 @@ def one_hive(coordinates):
 
 def movements(state):
     for coordinate, value in state.grid.items():
-        player, _ = value
+        player, tile = value
         if player == state.player():
             coordinates = set(state.grid.keys())
             coordinates.remove(coordinate)
             if one_hive(coordinates):
-                # TODO: Actual move (third argument)
-                yield ('move', coordinate, coordinate)
+                for target in tile.moves(coordinate, state):
+                    yield ('move', coordinate, target)
 
 def enumerate_hand(player, coordinates):
     """Fora given iterable of coordinates, enumerate all avilable tiles"""
