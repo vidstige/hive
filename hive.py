@@ -1,7 +1,7 @@
 import random
 from collections import defaultdict
 
-random.seed(1337)
+random.seed(1)
 
 def neighbours(c):
     """Returns cube hex neighbours"""
@@ -34,6 +34,15 @@ class Beetle(Tile):
 
 class Ant(Tile):
     name = 'ant'
+    def moves(self, coordinate, state):
+        targets = set()
+        # All neighbours
+        for coordinate in state.grid:
+            for neighbour in neighbours(coordinate):
+                targets.add(neighbour)
+        # ...except non-free
+        targets.difference_update(set(state.grid.keys()))
+        return targets
 
 class Grasshopper(Tile):
     name = 'grasshopper'
