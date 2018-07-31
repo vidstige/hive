@@ -14,9 +14,15 @@ def neighbours(c):
 
 class Tile(object):
     name = None
+    def moves(self, coordinate, state):
+        return None
+    def __repr__(self):
+        return "{}()".format(self.__class__.__name__)
 
 class Queen(Tile):
     name = 'queen'
+    def moves(self, coordinate, state):
+        return
     
 class Spider(Tile):
     name = 'spider'
@@ -30,13 +36,19 @@ class Ant(Tile):
 class Grasshopper(Tile):
     name = 'grasshopper'
 
+queen = Queen()
+spider = Spider()
+beetle = Beetle()
+ant = Ant()
+grasshopper = Grasshopper()
+
 class Player(object):
     hand = {
-        Queen: 1,
-        Spider: 2,
-        Beetle: 2,
-        Ant: 3,
-        Grasshopper: 3,
+        queen: 1,
+        spider: 2,
+        beetle: 2,
+        ant: 3,
+        grasshopper: 3,
     }
     def __init__(self, name):
         self.name = name
