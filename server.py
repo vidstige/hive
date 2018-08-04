@@ -15,7 +15,9 @@ def hello_world():
 
 def state2dict(state):
     return {
-        'grid': {repr(c): v[0].name for c, v in state.grid.items()}
+        'grid': {
+            repr(c): "{} {}".format(v[0].name, v[1].name) for c, v in state.grid.items()
+        }
     }
 
 

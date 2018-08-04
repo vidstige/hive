@@ -38,7 +38,7 @@ function draw(state) {
   ctx.fillStyle = "gray";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const size = 40;
+  const size = 20;
   const padding = 2;
   const w = Math.sqrt(3) * size;
   const h = 2 * size;
@@ -47,7 +47,8 @@ function draw(state) {
       const oddr = cube_to_oddr(parse_cube(coordinate_str));
       const x = oddr.column * w + (oddr.row & 1) * w / 2;
       const y = oddr.row * (h * 3/4);
-      ctx.fillStyle = state.grid[coordinate_str];
+      const parts = state.grid[coordinate_str].split(" ");
+      ctx.fillStyle = parts[0];
       drawHexagon(ctx, 320+x, 240+y, size - padding);
     }
   }
