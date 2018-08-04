@@ -12,13 +12,14 @@ def neighbours(c):
     for ox, oy,oz in offsets:
         yield x + ox, y + oy, z + oz
 
-def find_contour(state):
+def find_contour(state, exclude=None):
     """Returns all contour coordinates of the hive"""
     contour = set()
     # All neighbours
     for coordinate in state.grid:
-        for neighbour in neighbours(coordinate):
-            contour.add(neighbour)
+        if coordinate not in exclude:
+            for neighbour in neighbours(coordinate):
+                contour.add(neighbour)
     # ...except non-free
     contour.difference_update(set(state.grid.keys()))
     return contour
@@ -26,7 +27,7 @@ def find_contour(state):
 def trace_coutour(state, coordinate, steps=1):
     """Returns the two coordinates n steps away from coordinate along
     the hive contour."""
-    contour = find_contour(state)
+    contour = find_contour(state, exclude=(coordinate,))
     visited = set()
     todo = [(coordinate, 0)]
     while todo:
@@ -61,7 +62,7 @@ class Beetle(Tile):
 class Ant(Tile):
     name = 'ant'
     def moves(self, coordinate, state):
-        return find_contour(state)
+        return find_contour(state, exclude=(coordinate,))
 
 class Grasshopper(Tile):
     name = 'grasshopper'
