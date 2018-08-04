@@ -60,6 +60,8 @@ class Beetle(Tile):
 
 class Ant(Tile):
     name = 'ant'
+    def moves(self, coordinate, state):
+        return find_contour(state)
 
 class Grasshopper(Tile):
     name = 'grasshopper'
