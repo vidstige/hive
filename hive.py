@@ -215,4 +215,5 @@ def main():
             print("  ", move)
             state.do(move)
 
-main()
+if __name__ == "__main__":
+    main()
