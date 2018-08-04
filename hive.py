@@ -12,6 +12,32 @@ def neighbours(c):
     for ox, oy,oz in offsets:
         yield x + ox, y + oy, z + oz
 
+def find_contour(state):
+    """Returns all contour coordinates of the hive"""
+    contour = set()
+    # All neighbours
+    for coordinate in state.grid:
+        for neighbour in neighbours(coordinate):
+            contour.add(neighbour)
+    # ...except non-free
+    contour.difference_update(set(state.grid.keys()))
+    return contour
+
+def trace_coutour(state, coordinate, steps=1):
+    """Returns the two coordinates n steps away from coordinate along
+    the hive contour."""
+    contour = find_contour(state)
+    visited = set()
+    todo = [(coordinate, 0)]
+    while todo:
+        c, n = todo.pop()
+        for neighbour in neighbours(c):
+            if neighbour in contour and neighbour not in visited:
+                todo.append((neighbour, n + 1))
+                visited.add(neighbour)
+                if n == steps:
+                    yield c
+
 class Tile(object):
     name = None
     def moves(self, coordinate, state):
@@ -22,27 +48,18 @@ class Tile(object):
 class Queen(Tile):
     name = 'queen'
     def moves(self, coordinate, state):
-        for neighbour in neighbours(coordinate):
-            if neighbour not in state.grid:
-                yield neighbour
-    
+        return trace_coutour(state, coordinate, steps=1)
+
 class Spider(Tile):
     name = 'spider'
+    def moves(self, coordinate, state):
+        return trace_coutour(state, coordinate, steps=3)
 
 class Beetle(Tile):
     name = 'beetle'
 
 class Ant(Tile):
     name = 'ant'
-    def moves(self, coordinate, state):
-        targets = set()
-        # All neighbours
-        for coordinate in state.grid:
-            for neighbour in neighbours(coordinate):
-                targets.add(neighbour)
-        # ...except non-free
-        targets.difference_update(set(state.grid.keys()))
-        return targets
 
 class Grasshopper(Tile):
     name = 'grasshopper'
