@@ -47,12 +47,25 @@ function draw(state) {
   }
 }
 
-function ready() {
-  fetch('/api/state')
+function newGame() {
+  fetch('/api/new', {method: "POST"})
     .then(function(response) {
       return response.json();
     })
     .then(draw);
+}
+
+function randomMove() {
+  fetch('/api/random', {method: "POST"})
+    .then(function(response) {
+      return response.json();
+    })
+    .then(draw);
+}
+
+function ready() {
+  document.getElementById('new').onclick = newGame;
+  document.getElementById('random').onclick = randomMove;
 }
 
 document.addEventListener('DOMContentLoaded', ready);

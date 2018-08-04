@@ -19,18 +19,28 @@ def state2dict(state):
         'grid': {repr(c): repr(v[0]) for c, v in state.grid.items()}
     }
 
-@app.route('/api/state')
-def get_state():
+
+def send_state():
     if not state:
         return jsonify(None)
     return jsonify(state2dict(state))
 
-@app.route('/api/random')
+@app.route('/api/state')
+def get_state():
+    return send_state()
+
+@app.route('/api/new', methods=("POST",))
+def new_game():
+    global state
+    state = hive.State()
+    return send_state()
+
+@app.route('/api/random', methods=("POST",))
 def random_move():
     the_moves = list(hive.available_moves(state))
     if not the_moves:
         return "No available moves"
     move = random.choice(the_moves)
+    print("{}: {}".format(state.player(), move))
     state.do(move)
-
-    return jsonify("OK")
+    return send_state()
