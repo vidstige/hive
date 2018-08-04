@@ -30,8 +30,14 @@ function drawHexagon(ctx, x, y, size) {
 }
 
 function draw(state) {
+  console.log(state);
   const canvas = document.getElementById('target');
   const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "gray";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
   const size = 40;
   const padding = 2;
   const w = Math.sqrt(3) * size;
@@ -41,7 +47,7 @@ function draw(state) {
       const oddr = cube_to_oddr(parse_cube(coordinate_str));
       const x = oddr.column * w + (oddr.row & 1) * w / 2;
       const y = oddr.row * (h * 3/4);
-      ctx.fillStyle = '#000';
+      ctx.fillStyle = state.grid[coordinate_str];
       drawHexagon(ctx, 320+x, 240+y, size - padding);
     }
   }

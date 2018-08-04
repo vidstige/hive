@@ -86,10 +86,10 @@ class Player(object):
 
 class State(object):
     """Game state"""
-    # cube hex grid x+y+z=0
-    grid = {}
-    move_number = 0
-    players = (Player('white'), Player('black'))
+    def __init__(self):
+        self.grid = {}
+        self.move_number = 0
+        self.players = (Player('white'), Player('black'))
 
     def round(self):
         return self.move_number // 2

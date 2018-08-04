@@ -15,7 +15,7 @@ def hello_world():
 
 def state2dict(state):
     return {
-        'grid': {repr(c): repr(v[0]) for c, v in state.grid.items()}
+        'grid': {repr(c): v[0].name for c, v in state.grid.items()}
     }
 
 
@@ -32,8 +32,10 @@ def get_state():
 def new_game():
     seed = request.get_json()['seed']
     random.seed(seed)
+
     global state
     state = hive.State()
+    print(state.grid)
     return send_state()
 
 @app.route('/api/random', methods=("POST",))
