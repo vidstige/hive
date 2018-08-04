@@ -1,6 +1,5 @@
-
 import random
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 import hive
 
 app = Flask(__name__)
@@ -31,6 +30,8 @@ def get_state():
 
 @app.route('/api/new', methods=("POST",))
 def new_game():
+    seed = request.get_json()['seed']
+    random.seed(seed)
     global state
     state = hive.State()
     return send_state()
@@ -38,8 +39,6 @@ def new_game():
 @app.route('/api/random', methods=("POST",))
 def random_move():
     the_moves = list(hive.available_moves(state))
-    if not the_moves:
-        return "No available moves"
     move = random.choice(the_moves)
     print("{}: {}".format(state.player(), move))
     state.do(move)

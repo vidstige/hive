@@ -48,7 +48,13 @@ function draw(state) {
 }
 
 function newGame() {
-  fetch('/api/new', {method: "POST"})
+  const seed = document.getElementById('seed').value;
+  fetch('/api/new', {
+    method: "POST",
+    body: JSON.stringify({seed}),
+    headers: {
+      "Content-Type": "application/json; charset=utf-8"
+    }})
     .then(function(response) {
       return response.json();
     })
