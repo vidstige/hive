@@ -112,8 +112,33 @@ class State(object):
 
         self.move_number += 1
 
-def game_over(state):
-    return state.round() > 3
+def find(state, player, needle):
+    for c, v in state.grid.items():
+        player, tile = v
+        if tile == needle:
+            return c
+
+def looser(state, player, other_player):
+    q = find(state, player, queen)
+    if q:
+        if all(n in state.grid for n in neighbours(q)):
+            return other_player
+    else:
+        if state.round() >= 4:
+            return other_player
+    return None
+
+def winner(state):
+    white, black = state.players
+    white_loose = looser(state, white, black)
+    black_loose = looser(state, white, black)
+    #if white_loose and black_loose:
+    #    return None  # tie
+    if white_loose:
+        return black
+    if black_loose:
+        return white
+    return None  # game has not ended
 
 def placeable(state):
     """Returns all coordinates where the given player can
@@ -179,10 +204,14 @@ def available_moves(state):
 
 def main():
     state = State()
-    while not game_over(state):
+    while winner(state) is None:
         for player in state.players:
             print("Player {}".format(player.name))
-            move = random.choice(list(available_moves(state)))
+            the_moves = list(available_moves(state))
+            if not the_moves:
+                print("No available moves")
+                return
+            move = random.choice(the_moves)
             print("  ", move)
             state.do(move)
 
