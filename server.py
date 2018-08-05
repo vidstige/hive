@@ -17,7 +17,11 @@ def state2dict(state):
     return {
         'grid': {
             repr(c): "{} {}".format(v[0].name, v[1].name) for c, v in state.grid.items()
+        },
+        'players': {
+            player.name: {tile.name: count for tile, count in player.hand.items()} for player in state.players
         }
+
     }
 
 

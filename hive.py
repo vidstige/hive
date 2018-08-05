@@ -74,14 +74,15 @@ ant = Ant()
 grasshopper = Grasshopper()
 
 class Player(object):
-    hand = {
-        queen: 1,
-        spider: 2,
-        beetle: 2,
-        ant: 3,
-        grasshopper: 3,
-    }
     def __init__(self, name):
+        self.hand = {
+            queen: 1,
+            spider: 2,
+            beetle: 2,
+            ant: 3,
+            grasshopper: 3,
+        }
+
         self.name = name
 
     def __repr__(self):
