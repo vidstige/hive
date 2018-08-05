@@ -53,6 +53,8 @@ class Tile(object):
         return iter(())
     def __repr__(self):
         return "{}()".format(self.__class__.__name__)
+    def __deepcopy__(self, memo):
+        return self  # don't copy
 
 class Queen(Tile):
     name = 'queen'
@@ -225,17 +227,56 @@ def available_moves(state):
     return list(enumerate_hand(state.player(), placements)) + list(movements(state))
 
 
+# AI stuff
+from copy import deepcopy
+
+def evaluate(state, player):
+    white, black = state.players
+    other = white if player == black else black
+    player_free = len([n for n in neighbours(find(state, player, queen)) if n not in state.grid])
+    other_free = len([n for n in neighbours(find(state, other, queen)) if n not in state.grid])
+    return player_free - other_free
+
+def minmax(state: State, player: Player, d: int, alpha: int, beta: int):
+    if d <= 0:
+        return None, evaluate(state, player), 1
+
+    the_winner = winner(state)
+    if the_winner:
+        return None, 1 if the_winner == player else -1, 1
+
+    maximizing = state.player() == player 
+    f = max if maximizing else min
+    evaluations = {}
+    nn = 0
+    moves = available_moves(state)
+    for move in moves:
+        new_state = deepcopy(state)
+        new_state.do(move)
+        _, e, n = minmax(new_state, player, d - 1, alpha, beta)
+        if maximizing:
+            alpha = f(alpha, e)
+        else:
+            beta = f(beta, e)
+        evaluations[move] = e
+        nn += n
+        if beta <= alpha:
+            break
+
+    best = f(evaluations, key=evaluations.get)
+    return best, evaluations[best], nn
+
 def main():
     state = State()
     while winner(state) is None:
         for player in state.players:
             print("Player {}".format(player.name))
-            the_moves = list(available_moves(state))
-            if not the_moves:
-                print("No available moves")
-                return
-            move = random.choice(the_moves)
-            print("  ", move)
+            #the_moves = list(available_moves(state))
+            #move = random.choice(the_moves)
+            depth = 3
+            inf = 2 ** 64
+            move, _, n = minmax(state, player, depth, -inf, inf)
+            print("  ", move, "after", n)
             state.do(move)
 
 if __name__ == "__main__":
