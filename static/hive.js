@@ -79,8 +79,17 @@ function randomMove() {
     .then(draw);
 }
 
+function aiMove() {
+  fetch('/api/ai', {method: "POST"})
+    .then(function(response) {
+      return response.json();
+    })
+    .then(draw);
+}
+
 function ready() {
   document.getElementById('new').onclick = newGame;
+  document.getElementById('ai').onclick = aiMove;
   document.getElementById('random').onclick = randomMove;
 
   // load images

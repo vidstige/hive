@@ -51,3 +51,12 @@ def random_move():
     print("{}: {}".format(state.player(), move))
     state.do(move)
     return send_state()
+
+@app.route('/api/ai', methods=("POST",))
+def ai_move():
+    depth = 4
+    inf = 2 ** 64
+    move, _, n = hive.minmax(state, state.player(), depth, -inf, inf)
+    print("{}: {}".format(state.player(), move))
+    state.do(move)
+    return send_state()
