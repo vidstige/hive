@@ -200,9 +200,11 @@ def available_moves(state):
         start_tile = next(iter(state.grid))
         return enumerate_hand(state.player(), neighbours(start_tile))
     placements = enumerate_hand(state.player(), placeable(state))
-    tmp = list(movements(state))
-    print(tmp)
-    return list(placements) + tmp
+    # If queen is on hand - only placements...
+    if state.player().hand[queen] > 0:
+        return list(placements)
+    # ...but normally placements and movements
+    return list(placements) + list(movements(state))
 
 
 def main():
