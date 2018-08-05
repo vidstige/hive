@@ -243,6 +243,7 @@ def minmax(state: State, player: Player, d: int, alpha: int, beta: int):
 
     the_winner = winner(state)
     if the_winner:
+        print("leaf!")
         return None, 1 if the_winner == player else -1, 1
 
     maximizing = state.player() == player 
@@ -266,6 +267,8 @@ def minmax(state: State, player: Player, d: int, alpha: int, beta: int):
     best = f(evaluations, key=evaluations.get)
     return best, evaluations[best], nn
 
+import time
+
 def main():
     state = State()
     while winner(state) is None:
@@ -275,8 +278,12 @@ def main():
             #move = random.choice(the_moves)
             depth = 3
             inf = 2 ** 64
+            t0 = time.time()
             move, _, n = minmax(state, player, depth, -inf, inf)
+            t1 = time.time()
+            total = t1 - t0
             print("  ", move, "after", n)
+            print("{:.2f}ms/node".format(total / n * 1000))
             state.do(move)
 
 if __name__ == "__main__":
