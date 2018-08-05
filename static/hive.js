@@ -49,11 +49,10 @@ function draw(state) {
       const oddr = cube_to_oddr(parse_cube(coordinate_str));
       const x = oddr.column * w + (oddr.row & 1) * w / 2;
       const y = oddr.row * (h * 3/4);
-      const parts = state.grid[coordinate_str].split(" ");
-      ctx.fillStyle = parts[0];
+      const [player, tile] = state.grid[coordinate_str].split(" ");
+      ctx.fillStyle = player;
       drawHexagon(ctx, 320 + x, 240 + y, size - padding);
-      const img = images[parts[1]];
-      ctx.drawImage(img, 320 + x - size/2, 240 + y - size/2, size, size);
+      ctx.drawImage(images[tile], 320 + x - size/2, 240 + y - size/2, size, size);
     }
   }
 }
