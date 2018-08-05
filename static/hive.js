@@ -29,6 +29,8 @@ function drawHexagon(ctx, x, y, size) {
   ctx.fill();
 }
 
+var images = {};
+
 function draw(state) {
   console.log(state);
   const canvas = document.getElementById('target');
@@ -38,7 +40,7 @@ function draw(state) {
   ctx.fillStyle = "gray";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const size = 20;
+  const size = 32;
   const padding = 2;
   const w = Math.sqrt(3) * size;
   const h = 2 * size;
@@ -49,7 +51,9 @@ function draw(state) {
       const y = oddr.row * (h * 3/4);
       const parts = state.grid[coordinate_str].split(" ");
       ctx.fillStyle = parts[0];
-      drawHexagon(ctx, 320+x, 240+y, size - padding);
+      drawHexagon(ctx, 320 + x, 240 + y, size - padding);
+      const img = images[parts[1]];
+      ctx.drawImage(img, 320 + x - size/2, 240 + y - size/2, size, size);
     }
   }
 }
@@ -79,6 +83,24 @@ function randomMove() {
 function ready() {
   document.getElementById('new').onclick = newGame;
   document.getElementById('random').onclick = randomMove;
+
+  // load images
+  const urls = {
+    queen: 'static/images/honeybee.svg',
+    spider: 'static/images/spider.svg',
+    beetle: 'static/images/beetle.svg',
+    ant: 'static/images/ant.svg',
+    grasshopper: 'static/images/cockroach.svg',
+  }
+  for (const [name, url] of Object.entries(urls)) {
+    images[name] = new Image();
+    images[name].onload = function() {
+      //ctx.drawImage(img, 0, 0);
+      console.log('loaded', name);
+    }
+    images[name].src = url;
+  }
+
 }
 
 document.addEventListener('DOMContentLoaded', ready);
