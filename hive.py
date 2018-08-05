@@ -3,15 +3,23 @@ from collections import defaultdict
 
 random.seed(1)
 
+# Hex topology stuff
+offsets = [
+    (0, -1, 1), (1, -1, 0), (1, 0, -1),
+    (0, 1, -1), (-1, 1, 0), (-1, 0, 1)]
+
 def neighbours(c):
     """Returns cube hex neighbours"""
     x, y, z = c
-    offsets = [
-        (0, -1, 1), (1, -1, 0), (1, 0, -1),
-        (0, 1, -1), (-1, 1, 0), (-1, 0, 1)]
     for ox, oy,oz in offsets:
         yield x + ox, y + oy, z + oz
 
+def add(c1, c2):
+    x1, y1, z1 = c1
+    x2, y2, z2 = c2
+    return x1 + x2, y1 + y2, z1 + z2
+
+# Hive stuff
 def find_contour(state, exclude=None):
     """Returns all contour coordinates of the hive"""
     contour = set()
@@ -66,6 +74,14 @@ class Ant(Tile):
 
 class Grasshopper(Tile):
     name = 'grasshopper'
+    def moves(self, coordinate, state):
+        for direction in offsets:
+            p = add(coordinate, direction)
+            # Grasshopper must jump over at least one piece
+            if p in state.grid:
+                while p in state.grid:
+                    p = add(p, direction)
+                yield p
 
 queen = Queen()
 spider = Spider()
