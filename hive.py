@@ -123,12 +123,9 @@ def find(state, player, needle):
             return c
 
 def looser(state, player, other_player):
-    q = find(state, player, queen)
-    if q:
-        if all(n in state.grid for n in neighbours(q)):
-            return other_player
-    else:
-        if state.round() >= 4:
+    queen_coordinate = find(state, player, queen)
+    if queen_coordinate:
+        if all(n in state.grid for n in neighbours(queen_coordinate)):
             return other_player
     return None
 
@@ -200,12 +197,16 @@ def available_moves(state):
         # If single tile is placed, opponent places at neighbour
         start_tile = next(iter(state.grid))
         return enumerate_hand(state.player(), neighbours(start_tile))
-    placements = enumerate_hand(state.player(), placeable(state))
-    # If queen is on hand - only placements...
+    placements = placeable(state)
+    # If queen is still on hand...
     if state.player().hand[queen] > 0:
-        return list(placements)
+        # ...it must be placed on round 4
+        if state.round() + 1 == 4:
+            return [('place', queen, c) for c in placements]
+        # ...otherwise only placements...
+        return list(enumerate_hand(state.player(), placements))
     # ...but normally placements and movements
-    return list(placements) + list(movements(state))
+    return list(enumerate_hand(state.player(), placements)) + list(movements(state))
 
 
 def main():
