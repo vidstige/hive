@@ -31,6 +31,12 @@ function drawHexagon(ctx, x, y, size) {
 
 var images = {};
 
+function drawTile(ctx, x, y, size, padding, player, tile) {
+  ctx.fillStyle = player;
+  drawHexagon(ctx, 320 + x, 240 + y, size - padding);
+  ctx.drawImage(images[tile], 320 + x - size/2, 240 + y - size/2, size, size);
+}
+
 function draw(state) {
   console.log(state);
   const canvas = document.getElementById('target');
@@ -50,9 +56,7 @@ function draw(state) {
       const x = oddr.column * w + (oddr.row & 1) * w / 2;
       const y = oddr.row * (h * 3/4);
       const [player, tile] = state.grid[coordinate_str].split(" ");
-      ctx.fillStyle = player;
-      drawHexagon(ctx, 320 + x, 240 + y, size - padding);
-      ctx.drawImage(images[tile], 320 + x - size/2, 240 + y - size/2, size, size);
+      drawTile(ctx, x, y, size, padding, player, tile);
     }
   }
 }
