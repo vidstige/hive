@@ -1,3 +1,4 @@
+// hex grid stuff
 function cube_to_oddr(cube) {
     return {
       column: cube.x + Math.floor((cube.z - (cube.z & 1)) / 2),
@@ -12,6 +13,48 @@ function parse_cube(cube_str) {
   };
 }
 
+// Checks whether the point x,y is inside the pointy-top hexagon at hx, hy, size
+function inside(hx, hy, size, x, y) {
+  // translate & scale to normalized coordinate system
+  x -= hx; 
+  y -= hy;
+  x /= size;
+  y /= size;
+  console.log(x, y);
+
+  // Check length (squared) against inner and outer radius
+  const l2 = x * x + y * y;
+  if (l2 > 1.0) return false;
+  if (l2 < 0.75) return true; // (sqrt(3)/2)^2 = 3/4
+
+  // Check against borders
+  const px = x * 1.15470053838; // 2/sqrt(3)
+  if (px > 1.0 || px < -1.0) return false;
+
+  const py = 0.5 * px + y;
+  if (py > 1.0 || py < -1.0) return false;
+
+  if (px - py > 1.0 || px - py < -1.0) return false;
+
+  return true;
+}
+
+// Global :-(
+var images = {};
+
+// General UI stuff
+function disable(element) {
+  element.disabled = true;
+}
+
+function enable(element) {
+  return function() {
+    element.disabled = false;
+  };
+}
+
+
+// drawing stuff
 function drawHexagon(ctx, x, y, size) {
   ctx.beginPath();
   for (var i = 0; i < 6; i++) {
@@ -27,18 +70,6 @@ function drawHexagon(ctx, x, y, size) {
   }
   ctx.closePath();
   ctx.fill();
-}
-
-var images = {};
-
-function disable(element) {
-  element.disabled = true;
-}
-
-function enable(element) {
-  return function() {
-    element.disabled = false;
-  };
 }
 
 function drawTile(ctx, x, y, size, padding, player, tile) {
@@ -62,6 +93,7 @@ function drawHands(ctx, state, size, padding) {
   }
 }
 
+// The UI
 function UI() {
   const self = this;
   this.draw = function(state) {
@@ -132,6 +164,12 @@ function UI() {
       })
       .then(self.draw).then(enable(this));
   };
+
+  this.click = function(e) {
+    var x = e.pageX - e.target.offsetLeft; 
+    var y = e.pageY - e.target.offsetTop; 
+    console.log(inside(0, 0, 30, x, y));
+  };
 }
 
 function ready() {
@@ -140,6 +178,8 @@ function ready() {
   document.getElementById('evaluate').onclick = ui.evaluate;
   document.getElementById('ai').onclick = ui.aiMove;
   document.getElementById('random').onclick = ui.randomMove;
+
+  document.getElementById('target').onclick = ui.click;
 
   // load images
   const urls = {
