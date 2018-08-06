@@ -71,6 +71,16 @@ function newGame() {
     .then(draw);
 }
 
+function evaluate() {
+  fetch('/api/evaluation')
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(e) {
+      document.getElementById('evaluation').innerHTML = e
+    });
+}
+
 function randomMove() {
   fetch('/api/random', {method: "POST"})
     .then(function(response) {
@@ -89,6 +99,7 @@ function aiMove() {
 
 function ready() {
   document.getElementById('new').onclick = newGame;
+  document.getElementById('evaluate').onclick = evaluate;
   document.getElementById('ai').onclick = aiMove;
   document.getElementById('random').onclick = randomMove;
 

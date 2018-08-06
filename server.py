@@ -44,6 +44,10 @@ def new_game():
     print(state.grid)
     return send_state()
 
+@app.route('/api/evaluation')
+def evaluation():
+    return jsonify(hive.evaluate(state, state.player()))
+
 @app.route('/api/random', methods=("POST",))
 def random_move():
     the_moves = list(hive.available_moves(state))
