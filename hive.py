@@ -141,22 +141,20 @@ def find(state, player_needle, tile_needle):
             return c
     return None
 
-def looser(state, player, other_player):
+def is_looser(state, player):
     queen_coordinate = find(state, player, queen)
     if queen_coordinate:
         if all(n in state.grid for n in neighbours(queen_coordinate)):
-            return other_player
-    return None
+            return True
+    return False
 
 def winner(state):
     white, black = state.players
-    white_loose = looser(state, white, black)
-    black_loose = looser(state, white, black)
     #if white_loose and black_loose:
     #    return None  # tie
-    if white_loose:
+    if is_looser(state, white):
         return black
-    if black_loose:
+    if is_looser(state, black):
         return white
     return None  # game has not ended
 
@@ -239,7 +237,7 @@ def evaluate(state, player):
     other_queen = find(state, other, queen)
     player_free = len([n for n in neighbours(player_queen) if n not in state.grid]) if player_queen else 0
     other_free = len([n for n in neighbours(other_queen) if n not in state.grid]) if other_queen else 0
-    return player_free - other_free
+    return player_free - 4 * other_free
 
 def minmax(state: State, player: Player, d: int, alpha: int, beta: int):
     if d <= 0:
