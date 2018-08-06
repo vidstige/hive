@@ -134,11 +134,12 @@ class State(object):
 
         self.move_number += 1
 
-def find(state, player, needle):
+def find(state, player_needle, tile_needle):
     for c, v in state.grid.items():
         player, tile = v
-        if tile == needle:
+        if tile == tile_needle and player == player_needle:
             return c
+    return None
 
 def looser(state, player, other_player):
     queen_coordinate = find(state, player, queen)
@@ -233,8 +234,11 @@ from copy import deepcopy
 def evaluate(state, player):
     white, black = state.players
     other = white if player == black else black
-    player_free = len([n for n in neighbours(find(state, player, queen)) if n not in state.grid])
-    other_free = len([n for n in neighbours(find(state, other, queen)) if n not in state.grid])
+
+    player_queen = find(state, player, queen)
+    other_queen = find(state, other, queen)
+    player_free = len([n for n in neighbours(player_queen) if n not in state.grid]) if player_queen else 0
+    other_free = len([n for n in neighbours(other_queen) if n not in state.grid]) if other_queen else 0
     return player_free - other_free
 
 def minmax(state: State, player: Player, d: int, alpha: int, beta: int):
