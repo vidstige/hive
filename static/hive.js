@@ -6,6 +6,16 @@ function cube_to_oddr(cube) {
     };
 }
 
+function cube_to_xy(cube, size) {
+  const w = Math.sqrt(3) * size;
+  const h = 2 * size;
+  const oddr = cube_to_oddr(cube);
+  return {
+    x: oddr.column * w + (oddr.row & 1) * w / 2,
+    y: oddr.row * (h * 3/4)
+  };
+}
+
 function parse_cube(cube_str) {
   const c = cube_str.replace("(","").replace(")","").split(',');
   return {
@@ -108,13 +118,9 @@ function UI() {
   
     const size = 40;
     const padding = 2;
-    const w = Math.sqrt(3) * size;
-    const h = 2 * size;
     for (var coordinate_str in state.grid) {
       if (state.grid.hasOwnProperty(coordinate_str)) {
-        const oddr = cube_to_oddr(parse_cube(coordinate_str));
-        const x = oddr.column * w + (oddr.row & 1) * w / 2;
-        const y = oddr.row * (h * 3/4);
+        const {x, y} = cube_to_xy(parse_cube(coordinate_str), size);
         const [player, tile] = state.grid[coordinate_str].split(" ");
         drawTile(ctx, canvas.width/2 + x, canvas.height/2 + y, size, padding, player, tile);
       }
@@ -172,9 +178,11 @@ function UI() {
   };
 
   this.click = function(e) {
-    var x = e.pageX - e.target.offsetLeft; 
-    var y = e.pageY - e.target.offsetTop; 
-    console.log(inside(0, 0, 30, x, y));
+    const x = e.pageX - e.target.offsetLeft;
+    const y = e.pageY - e.target.offsetTop;
+    for (const [name, url] of Object.entries(self.state.grid)) {
+      console.log(inside(0, 0, 30, x, y));
+    }
   };
 }
 
