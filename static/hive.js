@@ -96,7 +96,8 @@ function drawHands(ctx, state, size, padding) {
 // The UI
 function UI() {
   const self = this;
-  this.draw = function(state) {
+  this.draw = function() {
+    const state = self.state;
     console.log(state);
     const canvas = document.getElementById('target');
     const ctx = canvas.getContext("2d");
@@ -122,6 +123,11 @@ function UI() {
     // draw hands
     drawHands(ctx, state, 24, padding);
   };
+
+  this.update = function(state) {
+    self.state = state;
+    self.draw();
+  };
   
   this.newGame = function () {
     const seed = document.getElementById('seed').value;
@@ -134,7 +140,7 @@ function UI() {
       .then(function(response) {
         return response.json();
       })
-      .then(self.draw);
+      .then(self.update);
   };
   
   this.evaluate = function() {
@@ -153,7 +159,7 @@ function UI() {
       .then(function(response) {
         return response.json();
       })
-      .then(self.draw).then(enable(this));
+      .then(self.update).then(enable(this));
   };
   
   this.aiMove = function() {
@@ -162,7 +168,7 @@ function UI() {
       .then(function(response) {
         return response.json();
       })
-      .then(self.draw).then(enable(this));
+      .then(self.update).then(enable(this));
   };
 
   this.click = function(e) {
