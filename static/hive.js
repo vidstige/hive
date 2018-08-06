@@ -30,8 +30,6 @@ function inside(hx, hy, size, x, y) {
   y -= hy;
   x /= size;
   y /= size;
-  console.log(x, y);
-
   // Check length (squared) against inner and outer radius
   const l2 = x * x + y * y;
   if (l2 > 1.0) return false;
@@ -178,10 +176,14 @@ function UI() {
   };
 
   this.click = function(e) {
-    const x = e.pageX - e.target.offsetLeft;
-    const y = e.pageY - e.target.offsetTop;
-    for (const [name, url] of Object.entries(self.state.grid)) {
-      console.log(inside(0, 0, 30, x, y));
+    const size = 40;
+    const mx = e.pageX - e.target.offsetLeft;
+    const my = e.pageY - e.target.offsetTop;
+    for (const [coordinate_str, value] of Object.entries(self.state.grid)) {
+      const {x, y} = cube_to_xy(parse_cube(coordinate_str), size);
+      if (inside(e.target.width/2 + x, e.target.height/2 + y, size, mx, my)) {
+        console.log("WEE");
+      }
     }
   };
 }

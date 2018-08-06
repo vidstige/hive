@@ -20,8 +20,8 @@ def state2dict(state):
         },
         'players': {
             player.name: {tile.name: count for tile, count in player.hand.items()} for player in state.players
-        }
-
+        },
+        'available_moves': ['{}, {}, {}'.format(action, arg1, arg2) for action, arg1, arg2 in hive.available_moves(state)],
     }
 
 
