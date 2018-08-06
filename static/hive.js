@@ -82,19 +82,30 @@ function evaluate() {
 }
 
 function randomMove() {
+  disable(this);
   fetch('/api/random', {method: "POST"})
     .then(function(response) {
       return response.json();
     })
-    .then(draw);
+    .then(draw).then(enable(this));
+}
+
+function disable(element) {
+  element.disabled = true;
+}
+function enable(element) {
+  return function() {
+    element.disabled = false;
+  };
 }
 
 function aiMove() {
+  disable(this);
   fetch('/api/ai', {method: "POST"})
     .then(function(response) {
       return response.json();
     })
-    .then(draw);
+    .then(draw).then(enable(this));
 }
 
 function ready() {
