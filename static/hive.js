@@ -33,8 +33,23 @@ var images = {};
 
 function drawTile(ctx, x, y, size, padding, player, tile) {
   ctx.fillStyle = player;
-  drawHexagon(ctx, 320 + x, 240 + y, size - padding);
-  ctx.drawImage(images[tile], 320 + x - size/2, 240 + y - size/2, size, size);
+  drawHexagon(ctx, x, y, size - padding);
+  ctx.drawImage(images[tile], x - size/2, y - size/2, size, size);
+}
+
+function drawHands(ctx, state, size, padding) {
+  const x = size * 2;
+  var y = size * 2;
+  for (const [player, hand] of Object.entries(state.players)) {
+    for (const [tile, count] of Object.entries(hand)) {
+      drawTile(ctx, x, y, size, padding, player, tile);
+      ctx.font = size + "px Arial";
+      ctx.fillText("x" + count, x + size, y);
+
+      y += size * 2;
+    }
+    y += size;
+  }
 }
 
 function draw(state) {
@@ -46,7 +61,7 @@ function draw(state) {
   ctx.fillStyle = "gray";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const size = 32;
+  const size = 40;
   const padding = 2;
   const w = Math.sqrt(3) * size;
   const h = 2 * size;
@@ -56,9 +71,12 @@ function draw(state) {
       const x = oddr.column * w + (oddr.row & 1) * w / 2;
       const y = oddr.row * (h * 3/4);
       const [player, tile] = state.grid[coordinate_str].split(" ");
-      drawTile(ctx, x, y, size, padding, player, tile);
+      drawTile(ctx, canvas.width/2 + x, canvas.height/2 + y, size, padding, player, tile);
     }
   }
+
+  // draw hands
+  drawHands(ctx, state, 24, padding);
 }
 
 function newGame() {
