@@ -31,6 +31,16 @@ function drawHexagon(ctx, x, y, size) {
 
 var images = {};
 
+function disable(element) {
+  element.disabled = true;
+}
+
+function enable(element) {
+  return function() {
+    element.disabled = false;
+  };
+}
+
 function drawTile(ctx, x, y, size, padding, player, tile) {
   ctx.fillStyle = player;
   drawHexagon(ctx, x, y, size - padding);
@@ -52,89 +62,84 @@ function drawHands(ctx, state, size, padding) {
   }
 }
 
-function draw(state) {
-  console.log(state);
-  const canvas = document.getElementById('target');
-  const ctx = canvas.getContext("2d");
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "gray";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const size = 40;
-  const padding = 2;
-  const w = Math.sqrt(3) * size;
-  const h = 2 * size;
-  for (var coordinate_str in state.grid) {
-    if (state.grid.hasOwnProperty(coordinate_str)) {
-      const oddr = cube_to_oddr(parse_cube(coordinate_str));
-      const x = oddr.column * w + (oddr.row & 1) * w / 2;
-      const y = oddr.row * (h * 3/4);
-      const [player, tile] = state.grid[coordinate_str].split(" ");
-      drawTile(ctx, canvas.width/2 + x, canvas.height/2 + y, size, padding, player, tile);
+function UI() {
+  const self = this;
+  this.draw = function(state) {
+    console.log(state);
+    const canvas = document.getElementById('target');
+    const ctx = canvas.getContext("2d");
+  
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "gray";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+    const size = 40;
+    const padding = 2;
+    const w = Math.sqrt(3) * size;
+    const h = 2 * size;
+    for (var coordinate_str in state.grid) {
+      if (state.grid.hasOwnProperty(coordinate_str)) {
+        const oddr = cube_to_oddr(parse_cube(coordinate_str));
+        const x = oddr.column * w + (oddr.row & 1) * w / 2;
+        const y = oddr.row * (h * 3/4);
+        const [player, tile] = state.grid[coordinate_str].split(" ");
+        drawTile(ctx, canvas.width/2 + x, canvas.height/2 + y, size, padding, player, tile);
+      }
     }
-  }
-
-  // draw hands
-  drawHands(ctx, state, 24, padding);
-}
-
-function newGame() {
-  const seed = document.getElementById('seed').value;
-  fetch('/api/new', {
-    method: "POST",
-    body: JSON.stringify({seed}),
-    headers: {
-      "Content-Type": "application/json; charset=utf-8"
-    }})
-    .then(function(response) {
-      return response.json();
-    })
-    .then(draw);
-}
-
-function evaluate() {
-  fetch('/api/evaluation')
-    .then(function(response) {
-      return response.json();
-    })
-    .then(function(e) {
-      document.getElementById('evaluation').innerHTML = e
-    });
-}
-
-function randomMove() {
-  disable(this);
-  fetch('/api/random', {method: "POST"})
-    .then(function(response) {
-      return response.json();
-    })
-    .then(draw).then(enable(this));
-}
-
-function disable(element) {
-  element.disabled = true;
-}
-function enable(element) {
-  return function() {
-    element.disabled = false;
+  
+    // draw hands
+    drawHands(ctx, state, 24, padding);
+  };
+  
+  this.newGame = function () {
+    const seed = document.getElementById('seed').value;
+    fetch('/api/new', {
+      method: "POST",
+      body: JSON.stringify({seed}),
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      }})
+      .then(function(response) {
+        return response.json();
+      })
+      .then(self.draw);
+  };
+  
+  this.evaluate = function() {
+    fetch('/api/evaluation')
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(e) {
+        document.getElementById('evaluation').innerHTML = e
+      });
+  };
+  
+  this.randomMove = function() {
+    disable(this);
+    fetch('/api/random', {method: "POST"})
+      .then(function(response) {
+        return response.json();
+      })
+      .then(self.draw).then(enable(this));
+  };
+  
+  this.aiMove = function() {
+    disable(this);
+    fetch('/api/ai', {method: "POST"})
+      .then(function(response) {
+        return response.json();
+      })
+      .then(self.draw).then(enable(this));
   };
 }
 
-function aiMove() {
-  disable(this);
-  fetch('/api/ai', {method: "POST"})
-    .then(function(response) {
-      return response.json();
-    })
-    .then(draw).then(enable(this));
-}
-
 function ready() {
-  document.getElementById('new').onclick = newGame;
-  document.getElementById('evaluate').onclick = evaluate;
-  document.getElementById('ai').onclick = aiMove;
-  document.getElementById('random').onclick = randomMove;
+  const ui = new UI();
+  document.getElementById('new').onclick = ui.newGame;
+  document.getElementById('evaluate').onclick = ui.evaluate;
+  document.getElementById('ai').onclick = ui.aiMove;
+  document.getElementById('random').onclick = ui.randomMove;
 
   // load images
   const urls = {
