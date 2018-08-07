@@ -42,10 +42,11 @@ def trace_coutour(state, coordinate, steps=1):
         c, n = todo.pop()
         for neighbour in neighbours(c):
             if neighbour in contour and neighbour not in visited:
-                todo.append((neighbour, n + 1))
                 visited.add(neighbour)
                 if n == steps:
                     yield c
+                else:
+                    todo.append((neighbour, n + 1))
 
 class Tile(object):
     name = None
