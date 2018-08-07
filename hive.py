@@ -97,7 +97,7 @@ class Player(object):
         self.hand = {
             queen: 1,
             spider: 2,
-            beetle: 2,
+            beetle: 0,  # until beetle movement is fixed (2)
             ant: 3,
             grasshopper: 3,
         }
@@ -204,7 +204,7 @@ def enumerate_hand(player, coordinates):
     for tile, count in player.hand.items():
         if count > 0:
             for c in coordinates:
-                yield ('place', tile, c)
+                yield 'place', tile, c
 
 def available_moves(state):
     if not state.grid:
@@ -214,7 +214,8 @@ def available_moves(state):
     if len(state.grid) == 1:
         # If single tile is placed, opponent places at neighbour
         start_tile = next(iter(state.grid))
-        return enumerate_hand(state.player(), neighbours(start_tile))
+        return enumerate_hand(state.player(), list(neighbours(start_tile)))
+    
     placements = placeable(state)
     # If queen is still on hand...
     if state.player().hand[queen] > 0:
@@ -238,7 +239,7 @@ def evaluate(state, player):
     other_queen = find(state, other, queen)
     player_free = len([n for n in neighbours(player_queen) if n not in state.grid]) if player_queen else 0
     other_free = len([n for n in neighbours(other_queen) if n not in state.grid]) if other_queen else 0
-    return player_free - 4 * other_free
+    return player_free - 2 * other_free
 
 def minmax(state: State, player: Player, d: int, alpha: int, beta: int):
     if d <= 0:
