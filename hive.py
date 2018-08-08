@@ -52,6 +52,8 @@ class Tile(object):
     name = None
     def moves(self, coordinate, state):
         return iter(())
+    def __str__(self):
+        return self.name
     def __repr__(self):
         return "{}()".format(self.__class__.__name__)
     def __deepcopy__(self, memo):
