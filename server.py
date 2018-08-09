@@ -7,7 +7,7 @@ app = Flask(__name__)
 # debug hax
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
-state = None
+state = hive.State()
 
 @app.route('/')
 def hello_world():
@@ -28,8 +28,6 @@ def state2dict(state):
 
 
 def send_state():
-    if not state:
-        return jsonify(None)
     return jsonify(state2dict(state))
 
 @app.route('/api/state')
@@ -43,7 +41,6 @@ def new_game():
 
     global state
     state = hive.State()
-    print(state.grid)
     return send_state()
 
 @app.route('/api/evaluation')

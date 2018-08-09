@@ -214,6 +214,12 @@ function ready() {
     images[name].src = url;
   }
 
+  // load current state
+  fetch('/api/state')
+    .then(function(response) {
+      return response.json();
+    })
+    .then(ui.update);
 }
 
 document.addEventListener('DOMContentLoaded', ready);
