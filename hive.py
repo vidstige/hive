@@ -135,6 +135,8 @@ class State(object):
         elif action == 'move':
             value = self.grid.pop(arg1)
             self.grid[arg2] = value
+        elif action == 'nothing':
+            pass
         else:
             print("UNKNOWN MOVE")
 
@@ -230,7 +232,10 @@ def available_moves(state):
         # ...otherwise only placements...
         return list(enumerate_hand(state.player(), placements))
     # ...but normally placements and movements
-    return list(enumerate_hand(state.player(), placements)) + list(movements(state))
+    available = list(enumerate_hand(state.player(), placements)) + list(movements(state))
+    if not available:
+        return [('nothing', None, None)]
+    return available
 
 
 # AI stuff
