@@ -122,6 +122,9 @@ class State(object):
     def player(self):
         return self.players[self.move_number % len(self.players)]
 
+    def opponent(self):
+        return self.players[(self.move_number + 1) % len(self.players)]
+
     def do(self, move):
         player = self.player()
         action, arg1, arg2 = move
