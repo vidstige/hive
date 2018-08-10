@@ -102,7 +102,7 @@ function drawHands(ctx, state, size, padding) {
 }
 
 // The UI
-function UI() {
+function HiveUI() {
   const self = this;
   this.draw = function() {
     const state = self.state;
@@ -189,7 +189,7 @@ function UI() {
 }
 
 function ready() {
-  const ui = new UI();
+  const ui = new HiveUI();
   document.getElementById('new').onclick = ui.newGame;
   document.getElementById('evaluate').onclick = ui.evaluate;
   document.getElementById('ai').onclick = ui.aiMove;
