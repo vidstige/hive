@@ -163,14 +163,46 @@ function center(p, container) {
   return {x: container.width/2 + p.x, y: container.height/2 + p.y};
 }
 
+function eq(a, b) {
+  return JSON.stringify(a) == JSON.stringify(b);
+}
+
+function AvailableMoves(state) {
+  const moves = [];
+  for (const move_str of state.available_moves) {
+    const [action, arg1, arg2] = move_str.split("|");
+    if (action == "move") {
+      moves.push({action, from: parse_cube(arg1), to: parse_cube(arg2)});
+    }
+    if (action == "place") {
+      moves.push({action, tile: arg1, at: parse_cube(arg2)});
+    }
+  }
+  this.canMoveFrom = function(coordinate) {
+    for (var i = 0; i < moves.length; i++) {
+      const move = moves[i];
+      //console.log(move, coordinate)
+      if (move.action == "move" && eq(move.from, coordinate)) {
+        console.log("ok");
+        return true;
+      }
+    }
+    return false;
+  };
+}
+
 // The UI
 function createGrid(state) {
+  const moves = new AvailableMoves(state);
   const size = 40;
   var items = [];
   for (const [coordinate_str, value] of Object.entries(state.grid)) {
-    const p = cube_to_xy(parse_cube(coordinate_str), size);
+    const cube = parse_cube(coordinate_str);
+    const p = cube_to_xy(cube, size);
     const [player, tile] = value.split(" ");
-    items.push(new HexButton(p, size, player, tile));
+    const button = new HexButton(p, size, player, tile);
+    button.enabled = moves.canMoveFrom(cube);
+    items.push(button);
   }
   return items;
 }
