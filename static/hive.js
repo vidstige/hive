@@ -149,6 +149,9 @@ function HexButton(position, size, color, tile) {
   };
   this.draw = function(ctx, position) {
     const {x, y} = position;
+    if (this.enabled) {
+      drawTile(ctx, x, y, size, 0, "purple", tile);
+    }
     drawTile(ctx, x, y, size, padding, color, tile);
   };
   this.contains = function(p, needle) {
@@ -180,7 +183,9 @@ function createHand(state) {
   var items = [];
   for (const [player, hand] of Object.entries(state.players)) {
     for (const [tile, count] of Object.entries(hand)) {
-      items.push(new HexButton({x, y}, size, player, tile));
+      const button = new HexButton({x, y}, size, player, tile);
+      button.enabled = player == state.current && count > 0;
+      items.push(button);
       items.push(new Label(
         {x: x + size, y: y},
         "x" + count,
