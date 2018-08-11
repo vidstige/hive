@@ -1,3 +1,48 @@
+// UI Framework
+function UI(root) {
+  this.root = root || {};
+  this.find = function(coordinate) {
+    /*const items = ui.items;
+    for (var i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.contains(coordinate)) {
+        return item;
+      }
+    }*/
+    return null;
+  };
+}
+
+function Renderer(canvas) {
+  const ctx = canvas.getContext("2d");
+
+  this._render = function(node, offset) {
+    if (node.items) {
+      const items = node.items;
+      for (var i = 0; i < items.length; i++) {
+        this._render(
+          items[i],
+          node.center ? {x: canvas.width/2, y: canvas.height/2} : offset);
+      }
+    }
+    if (node.position && node.draw) {
+      // Widget
+      var p = node.position();
+      node.draw(ctx, {x: p.x + offset.x, y: p.y + offset.y});
+    }
+  }
+
+  this.render = function(ui) {
+    // Clear with background
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "gray";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    this._render(ui.root, {x: 0, y: 0});
+  };
+}
+
+
 // hex grid stuff
 function cube_to_oddr(cube) {
     return {
@@ -86,50 +131,79 @@ function drawTile(ctx, x, y, size, padding, player, tile) {
   ctx.drawImage(images[tile], x - size/2, y - size/2, size, size);
 }
 
-function drawHands(ctx, state, size, padding) {
+function Label(position, text, font) {
+  this.position = function() {
+    return position;
+  };
+  this.draw = function(ctx, position) {
+    const {x, y} = position;
+    ctx.font = font;
+    ctx.fillText(text, x, y);
+  };
+}
+
+function HexButton(position, size, color, tile) {
+  const padding = 2;
+  this.position = function() {
+    return position;
+  };
+  this.draw = function(ctx, position) {
+    const {x, y} = position;
+    drawTile(ctx, x, y, size, padding, color, tile);
+  };
+}
+
+function center(p, container) {
+  return {x: container.width/2 + p.x, y: container.height/2 + p.y};
+}
+
+// The UI
+function createGrid(state) {
+  const size = 40;
+  var items = [];
+  for (const [coordinate_str, value] of Object.entries(state.grid)) {
+    const p = cube_to_xy(parse_cube(coordinate_str), size);
+    const [player, tile] = value.split(" ");
+    items.push(new HexButton(p, size, player, tile));
+  }
+  return items;
+}
+
+function createHand(state) {
+  const size = 20;
+  const padding = 2;
   const x = size * 2;
   var y = size * 2;
+  var items = [];
   for (const [player, hand] of Object.entries(state.players)) {
     for (const [tile, count] of Object.entries(hand)) {
-      drawTile(ctx, x, y, size, padding, player, tile);
-      ctx.font = size + "px Arial";
-      ctx.fillText("x" + count, x + size, y);
-
+      items.push(new HexButton({x, y}, size, player, tile));
+      items.push(new Label(
+        {x: x + size, y: y},
+        "x" + count,
+        size + "px Arial"));
       y += size * 2;
     }
     y += size;
   }
+  return items;
 }
 
-// The UI
 function HiveUI() {
   const self = this;
+  const canvas = document.getElementById('target');
+  const renderer = new Renderer(canvas);
+
   this.draw = function() {
-    const state = self.state;
-    console.log(state);
-    const canvas = document.getElementById('target');
-    const ctx = canvas.getContext("2d");
-  
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "gray";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-    const size = 40;
-    const padding = 2;
-    for (var coordinate_str in state.grid) {
-      if (state.grid.hasOwnProperty(coordinate_str)) {
-        const {x, y} = cube_to_xy(parse_cube(coordinate_str), size);
-        const [player, tile] = state.grid[coordinate_str].split(" ");
-        drawTile(ctx, canvas.width/2 + x, canvas.height/2 + y, size, padding, player, tile);
-      }
-    }
-  
-    // draw hands
-    drawHands(ctx, state, 24, padding);
+    renderer.render(self.ui);
   };
 
   this.update = function(state) {
-    self.state = state;
+    self.ui = new UI(
+      {items: [
+        {items: createHand(state)},
+        {items: createGrid(state), center: true}
+      ]});
     self.draw();
   };
   
