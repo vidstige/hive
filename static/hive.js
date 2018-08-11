@@ -1,36 +1,31 @@
 // UI Framework
+function _walk(node, offset, center, callback) {
+  if (node.items) {
+    const items = node.items;
+    for (var i = 0; i < items.length; i++) {
+      _walk(
+        items[i],
+        node.center ? center : offset,
+        center,
+        callback);
+    }
+  }
+  if (node.position && node.draw) {
+    var p = node.position();
+    callback(node, {x: p.x + offset.x, y: p.y + offset.y});
+  }
+}
+
 function UI(root) {
   this.root = root || {};
-  this.find = function(coordinate) {
-    /*const items = ui.items;
-    for (var i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.contains(coordinate)) {
-        return item;
-      }
-    }*/
-    return null;
+
+  this.walk = function(callback, center) {
+    _walk(root, {x: 0, y: 0}, center, callback);
   };
 }
 
 function Renderer(canvas) {
   const ctx = canvas.getContext("2d");
-
-  this._render = function(node, offset) {
-    if (node.items) {
-      const items = node.items;
-      for (var i = 0; i < items.length; i++) {
-        this._render(
-          items[i],
-          node.center ? {x: canvas.width/2, y: canvas.height/2} : offset);
-      }
-    }
-    if (node.position && node.draw) {
-      // Widget
-      var p = node.position();
-      node.draw(ctx, {x: p.x + offset.x, y: p.y + offset.y});
-    }
-  }
 
   this.render = function(ui) {
     // Clear with background
@@ -38,7 +33,9 @@ function Renderer(canvas) {
     ctx.fillStyle = "gray";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    this._render(ui.root, {x: 0, y: 0});
+    ui.walk(function(node, p) {
+      node.draw(ctx, p);
+    }, {x: canvas.width/2, y: canvas.height/2});
   };
 }
 
@@ -140,6 +137,9 @@ function Label(position, text, font) {
     ctx.font = font;
     ctx.fillText(text, x, y);
   };
+  this.contains = function(p, needle) {
+    return false;
+  }
 }
 
 function HexButton(position, size, color, tile) {
@@ -150,6 +150,9 @@ function HexButton(position, size, color, tile) {
   this.draw = function(ctx, position) {
     const {x, y} = position;
     drawTile(ctx, x, y, size, padding, color, tile);
+  };
+  this.contains = function(p, needle) {
+    return inside(p.x, p.y, size, needle.x, needle.y);
   };
 }
 
@@ -250,15 +253,14 @@ function HiveUI() {
   };
 
   this.click = function(e) {
-    const size = 40;
     const mx = e.pageX - e.target.offsetLeft;
     const my = e.pageY - e.target.offsetTop;
-    for (const [coordinate_str, value] of Object.entries(self.state.grid)) {
-      const {x, y} = cube_to_xy(parse_cube(coordinate_str), size);
-      if (inside(e.target.width/2 + x, e.target.height/2 + y, size, mx, my)) {
-        console.log("WEE");
+    const mouse = {x: mx, y: my};
+    self.ui.walk(function(node, p) {
+      if (node.contains(p, mouse)) {
+        console.log(node);
       }
-    }
+    }, {x: canvas.width/2, y: canvas.height/2});
   };
 }
 
