@@ -192,6 +192,19 @@ function createHand(state) {
   return items;
 }
 
+function parseJson(response) {
+  return response.json();
+}
+function postJson(url, body) {
+  return fetch(url, {
+    method: "POST",
+    body: body ? JSON.stringify(body) : undefined,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8"
+    }})
+    .then(parseJson);
+}
+
 function HiveUI() {
   const self = this;
   const canvas = document.getElementById('target');
@@ -212,23 +225,12 @@ function HiveUI() {
   
   this.newGame = function () {
     const seed = document.getElementById('seed').value;
-    fetch('/api/new', {
-      method: "POST",
-      body: JSON.stringify({seed}),
-      headers: {
-        "Content-Type": "application/json; charset=utf-8"
-      }})
-      .then(function(response) {
-        return response.json();
-      })
-      .then(self.update);
+    postJson('/api/new', {seed}).then(self.update);      
   };
   
   this.evaluate = function() {
     fetch('/api/evaluation')
-      .then(function(response) {
-        return response.json();
-      })
+      .then(parseJson)
       .then(function(e) {
         document.getElementById('evaluation').innerHTML = e
       });
@@ -236,20 +238,16 @@ function HiveUI() {
   
   this.randomMove = function() {
     disable(this);
-    fetch('/api/random', {method: "POST"})
-      .then(function(response) {
-        return response.json();
-      })
-      .then(self.update).then(enable(this));
+    postJson('/api/random')
+      .then(self.update)
+      .then(enable(this));
   };
   
   this.aiMove = function() {
     disable(this);
-    fetch('/api/ai', {method: "POST"})
-      .then(function(response) {
-        return response.json();
-      })
-      .then(self.update).then(enable(this));
+    postJson('/api/ai')
+      .then(self.update)
+      .then(enable(this));
   };
 
   this.click = function(e) {
