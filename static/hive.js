@@ -292,8 +292,12 @@ function HiveUI() {
     const my = e.pageY - e.target.offsetTop;
     const mouse = {x: mx, y: my};
     self.ui.walk(function(node, p) {
-      if (node.contains(p, mouse)) {
-        console.log(node);
+      if (node.contains(p, mouse) && node.enabled) {
+        if (node.click) {
+          node.click();
+        } else {
+          console.warn("No handler registred");
+        }
       }
     }, {x: canvas.width/2, y: canvas.height/2});
   };
