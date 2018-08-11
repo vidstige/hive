@@ -240,14 +240,14 @@ function HiveUI() {
     disable(this);
     postJson('/api/random')
       .then(self.update)
-      .then(enable(this));
+      .finally(enable(this));
   };
   
   this.aiMove = function() {
     disable(this);
     postJson('/api/ai')
       .then(self.update)
-      .then(enable(this));
+      .finally(enable(this));
   };
 
   this.click = function(e) {
