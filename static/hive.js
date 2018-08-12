@@ -169,25 +169,29 @@ function eq(a, b) {
 
 function AvailableMoves(state) {
   const moves = [];
+  const placements = [];
   for (const move_str of state.available_moves) {
     const [action, arg1, arg2] = move_str.split("|");
     if (action == "move") {
-      moves.push({action, from: parse_cube(arg1), to: parse_cube(arg2)});
+      moves.push({from: parse_cube(arg1), to: parse_cube(arg2)});
     }
     if (action == "place") {
-      moves.push({action, tile: arg1, at: parse_cube(arg2)});
+      placements.push({tile: arg1, at: parse_cube(arg2)});
     }
   }
   this.canMoveFrom = function(coordinate) {
     for (var i = 0; i < moves.length; i++) {
       const move = moves[i];
-      //console.log(move, coordinate)
       if (move.action == "move" && eq(move.from, coordinate)) {
-        console.log("ok");
         return true;
       }
     }
     return false;
+  };
+  this.placeTargetsFor = function(tile) {
+    return placements
+      .filter(function(p) { return p.tile == tile; })
+      .map(function(p) { return p.at; });
   };
 }
 
@@ -209,14 +213,15 @@ function createGrid(state) {
 
 function createHand(state) {
   const size = 20;
-  const padding = 2;
   const x = size * 2;
   var y = size * 2;
   var items = [];
+  var map = {};
   for (const [player, hand] of Object.entries(state.players)) {
+    map[player] = {};
     for (const [tile, count] of Object.entries(hand)) {
       const button = new HexButton({x, y}, size, player, tile);
-      button.enabled = player == state.current && count > 0;
+      map[player][tile] = button;
       items.push(button);
       items.push(new Label(
         {x: x + size, y: y},
@@ -225,6 +230,12 @@ function createHand(state) {
       y += size * 2;
     }
     y += size;
+  }
+
+  const moves = new AvailableMoves(state);
+  for (const [tile, button] of Object.entries(map[state.current])) {
+    button.dragTargets = moves.placeTargetsFor(tile);
+    button.enabled = button.dragTargets.length > 0;
   }
   return items;
 }
@@ -240,6 +251,12 @@ function postJson(url, body) {
       "Content-Type": "application/json; charset=utf-8"
     }})
     .then(parseJson);
+}
+
+function mouse(e) {
+  return {
+    x: e.pageX - e.target.offsetLeft,
+    y: e.pageY - e.target.offsetTop};
 }
 
 function HiveUI() {
@@ -287,19 +304,18 @@ function HiveUI() {
       .finally(enable(this));
   };
 
-  this.click = function(e) {
-    const mx = e.pageX - e.target.offsetLeft;
-    const my = e.pageY - e.target.offsetTop;
-    const mouse = {x: mx, y: my};
+  this.mousedown = function(e) {
     self.ui.walk(function(node, p) {
-      if (node.contains(p, mouse) && node.enabled) {
-        if (node.click) {
-          node.click();
-        } else {
-          console.warn("No handler registred");
+      if (node.contains(p, mouse(e)) && node.enabled) {
+        const targets = node.dragTargets;
+        if (targets) {
+          console.log(targets);
         }
       }
     }, {x: canvas.width/2, y: canvas.height/2});
+  };
+
+  this.mouseover = function(e) {
   };
 }
 
@@ -310,7 +326,9 @@ function ready() {
   document.getElementById('ai').onclick = ui.aiMove;
   document.getElementById('random').onclick = ui.randomMove;
 
-  document.getElementById('target').onclick = ui.click;
+  document.getElementById('target').onmousedown = ui.mousedown;
+  document.getElementById('target').onmouseup = ui.mouseup;
+  document.getElementById('target').onmousemove = ui.mouseover;
 
   // load images
   const urls = {
