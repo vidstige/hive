@@ -1,1 +1,1 @@
-FLASK_APP=server.py FLASK_ENV=development flask run --reload
+FLASK_APP=server.py FLASK_ENV=development venv/bin/flask run --reload
