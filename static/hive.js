@@ -1,26 +1,19 @@
 // UI Framework
-function _walk(node, offset, center, callback) {
+function _walk(node, parent, callback, options) {
   if (node.items) {
     const items = node.items;
     for (var i = 0; i < items.length; i++) {
-      _walk(
-        items[i],
-        node.center ? center : offset,
-        center,
-        callback);
+      _walk(items[i], node, callback, options);
     }
   }
-  if (node.position && node.draw) {
-    var p = node.position();
-    callback(node, {x: p.x + offset.x, y: p.y + offset.y});
-  }
+  callback(node, parent, options);
 }
 
 function UI(root) {
   this.root = root || {};
 
-  this.walk = function(callback, center) {
-    _walk(root, {x: 0, y: 0}, center, callback);
+  this.walk = function(callback, options) {
+    _walk(root, null, callback, options);
   };
 }
 
@@ -33,9 +26,15 @@ function Renderer(canvas) {
     ctx.fillStyle = "gray";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ui.walk(function(node, p) {
-      node.draw(ctx, p);
-    }, {x: canvas.width/2, y: canvas.height/2});
+    const boundingBox = {
+      topLeft: {x: 0, y: 0},
+      size: {width: canvas.width, height: canvas.height}};
+    ui.walk(function(node, parent, options) {
+      if (node.draw) {
+        const p = parent.positionOf(node, options.boundingBox);
+        node.draw(ctx, p);
+      }
+    }, {boundingBox: boundingBox});
   };
 }
 
@@ -128,10 +127,39 @@ function drawTile(ctx, x, y, size, padding, player, tile) {
   ctx.drawImage(images[tile], x - size/2, y - size/2, size, size);
 }
 
-function Label(position, text, font) {
-  this.position = function() {
-    return position;
+// GridXY - Container where you specify item locations with x, y
+var _id = 1;
+function GridXY() {
+  this._id = _id++;
+  this.items = [];
+  const positions = {};
+  this.add = function(p, item) {
+    this.items.push(item);
+    positions[item._id] = p;
   };
+  this.positionOf = function(item) {
+    return positions[item._id];
+  };
+}
+
+// Layouts items in hex grid using cube coordinates
+function HexGrid(size) {
+  this._id = _id++;
+  this.items = [];
+  const positions = {};
+  this.add = function(p, item) {
+    this.items.push(item);
+    positions[item._id] = p;
+  };
+  this.positionOf = function(item, boundingBox) {
+    const cube = positions[item._id];
+    const p = cube_to_xy(cube, size);
+    return center(p, boundingBox.size);
+  };
+}
+
+function Label(text, font) {
+  this._id = _id++;
   this.draw = function(ctx, position) {
     const {x, y} = position;
     ctx.font = font;
@@ -139,15 +167,14 @@ function Label(position, text, font) {
   };
   this.contains = function(p, needle) {
     return false;
-  }
+  };
 }
 
-function HexButton(position, size, color, tile) {
+function HexButton(size, color, tile) {
+  this._id = _id++;
   const padding = 2;
-  this.position = function() {
-    return position;
-  };
   this.draw = function(ctx, position) {
+    console.log(position);
     const {x, y} = position;
     if (this.enabled) {
       drawTile(ctx, x, y, size, 0, "purple", tile);
@@ -199,32 +226,30 @@ function AvailableMoves(state) {
 function createGrid(state) {
   const moves = new AvailableMoves(state);
   const size = 40;
-  var items = [];
+  const grid = new HexGrid(size);
   for (const [coordinate_str, value] of Object.entries(state.grid)) {
     const cube = parse_cube(coordinate_str);
-    const p = cube_to_xy(cube, size);
     const [player, tile] = value.split(" ");
-    const button = new HexButton(p, size, player, tile);
+    const button = new HexButton(size, player, tile);
     button.enabled = moves.canMoveFrom(cube);
-    items.push(button);
+    grid.add(cube, button);
   }
-  return items;
+  return grid;
 }
 
 function createHand(state) {
   const size = 20;
   const x = size * 2;
   var y = size * 2;
-  var items = [];
+  const grid = new GridXY();
   var map = {};
   for (const [player, hand] of Object.entries(state.players)) {
     map[player] = {};
     for (const [tile, count] of Object.entries(hand)) {
-      const button = new HexButton({x, y}, size, player, tile);
+      const button = new HexButton(size, player, tile);
       map[player][tile] = button;
-      items.push(button);
-      items.push(new Label(
-        {x: x + size, y: y},
+      grid.add({x, y: y + 0}, button);
+      grid.add({x: x + size, y: y}, new Label(
         "x" + count,
         size + "px Arial"));
       y += size * 2;
@@ -237,12 +262,13 @@ function createHand(state) {
     button.dragTargets = moves.placeTargetsFor(tile);
     button.enabled = button.dragTargets.length > 0;
   }
-  return items;
+  return grid;
 }
 
 function parseJson(response) {
   return response.json();
 }
+
 function postJson(url, body) {
   return fetch(url, {
     method: "POST",
@@ -264,17 +290,17 @@ function HiveUI() {
   const canvas = document.getElementById('target');
   const renderer = new Renderer(canvas);
 
-  this.draw = function() {
+  this.render = function() {
     renderer.render(self.ui);
   };
 
   this.update = function(state) {
     self.ui = new UI(
       {items: [
-        {items: createHand(state)},
-        {items: createGrid(state), center: true}
+        createHand(state),
+        createGrid(state)
       ]});
-    self.draw();
+    self.render();
   };
   
   this.newGame = function () {
