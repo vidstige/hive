@@ -5,8 +5,9 @@ function _walk(node, parent, callback, options) {
     for (var i = 0; i < items.length; i++) {
       _walk(items[i], node, callback, options);
     }
+  } else {
+    callback(node, parent, options);
   }
-  callback(node, parent, options);
 }
 
 function UI(root) {
@@ -174,7 +175,6 @@ function HexButton(size, color, tile) {
   this._id = _id++;
   const padding = 2;
   this.draw = function(ctx, position) {
-    console.log(position);
     const {x, y} = position;
     if (this.enabled) {
       drawTile(ctx, x, y, size, 0, "purple", tile);
@@ -207,13 +207,7 @@ function AvailableMoves(state) {
     }
   }
   this.canMoveFrom = function(coordinate) {
-    for (var i = 0; i < moves.length; i++) {
-      const move = moves[i];
-      if (move.action == "move" && eq(move.from, coordinate)) {
-        return true;
-      }
-    }
-    return false;
+    return moves.some(function(move) { return eq(move.from, coordinate); })
   };
   this.placeTargetsFor = function(tile) {
     return placements
@@ -338,7 +332,7 @@ function HiveUI() {
           console.log(targets);
         }
       }
-    }, {x: canvas.width/2, y: canvas.height/2});
+    });
   };
 
   this.mouseover = function(e) {
@@ -367,7 +361,6 @@ function ready() {
   for (const [name, url] of Object.entries(urls)) {
     images[name] = new Image();
     images[name].onload = function() {
-      //ctx.drawImage(img, 0, 0);
       console.log('loaded', name);
     }
     images[name].src = url;
