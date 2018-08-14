@@ -206,8 +206,8 @@ function AvailableMoves(state) {
       placements.push({tile: arg1, at: parse_cube(arg2)});
     }
   }
-  this.canMoveFrom = function(coordinate) {
-    return moves.some(function(move) { return eq(move.from, coordinate); })
+  this.moveTargetsFrom = function(coordinate) {
+    return moves.filter(function(move) { return eq(move.from, coordinate); });
   };
   this.placeTargetsFor = function(tile) {
     return placements
@@ -225,7 +225,8 @@ function createGrid(state) {
     const cube = parse_cube(coordinate_str);
     const [player, tile] = value.split(" ");
     const button = new HexButton(size, player, tile);
-    button.enabled = moves.canMoveFrom(cube);
+    button.dragTargets = moves.moveTargetsFrom(cube);
+    button.enabled = button.dragTargets.length > 0;
     grid.add(cube, button);
   }
   return grid;
