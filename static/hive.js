@@ -10,18 +10,10 @@ function _walk(node, parent, callback, options) {
   }
 }
 
-function UI(root) {
-  this.root = root || {};
-
-  this.walk = function(callback, options) {
-    _walk(root, null, callback, options);
-  };
-}
-
-function Renderer(canvas) {
+function UI(root, canvas) {
   const ctx = canvas.getContext("2d");
 
-  this.render = function(ui) {
+  this.render = function() {
     // Clear with background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "gray";
@@ -30,7 +22,7 @@ function Renderer(canvas) {
     const boundingBox = {
       topLeft: {x: 0, y: 0},
       size: {width: canvas.width, height: canvas.height}};
-    ui.walk(function(node, parent, options) {
+    _walk(root, null, function(node, parent, options) {
       if (node.draw) {
         const p = parent.positionOf(node, options.boundingBox);
         node.draw(ctx, p);
@@ -38,7 +30,6 @@ function Renderer(canvas) {
     }, {boundingBox: boundingBox});
   };
 }
-
 
 // hex grid stuff
 function cube_to_oddr(cube) {
@@ -283,19 +274,14 @@ function mouse(e) {
 function HiveUI() {
   const self = this;
   const canvas = document.getElementById('target');
-  const renderer = new Renderer(canvas);
-
-  this.render = function() {
-    renderer.render(self.ui);
-  };
 
   this.update = function(state) {
-    self.ui = new UI(
+    const ui = new UI(
       {items: [
         createHand(state),
         createGrid(state)
-      ]});
-    self.render();
+      ]}, canvas);
+    ui.render();
   };
   
   this.newGame = function () {
