@@ -23,6 +23,24 @@ function UI(root, canvas) {
       }, {boundingBox: boundingBox});
   };
 
+  this.mousedown = function(e) {
+    walk(function(node, p) {
+      if (node.contains(p, mouse(e)) && node.enabled) {
+        const targets = node.dragTargets;
+        if (targets) {
+          console.log(targets);
+        }
+      }
+    });
+  };
+
+  this.mousemove = function(e) {
+  };
+  
+  canvas.onmousedown = this.mousedown;
+  canvas.onmouseup = this.mouseup;
+  canvas.onmousemove = this.mousemove;
+
   this.render = function() {
     // Clear with background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -314,20 +332,6 @@ function HiveUI() {
       .then(self.update)
       .finally(enable(this));
   };
-
-  this.mousedown = function(e) {
-    self.ui.walk(function(node, p) {
-      if (node.contains(p, mouse(e)) && node.enabled) {
-        const targets = node.dragTargets;
-        if (targets) {
-          console.log(targets);
-        }
-      }
-    });
-  };
-
-  this.mouseover = function(e) {
-  };
 }
 
 function ready() {
@@ -336,10 +340,6 @@ function ready() {
   document.getElementById('evaluate').onclick = ui.evaluate;
   document.getElementById('ai').onclick = ui.aiMove;
   document.getElementById('random').onclick = ui.randomMove;
-
-  document.getElementById('target').onmousedown = ui.mousedown;
-  document.getElementById('target').onmouseup = ui.mouseup;
-  document.getElementById('target').onmousemove = ui.mouseover;
 
   // load images
   const urls = {
