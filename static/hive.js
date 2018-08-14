@@ -13,21 +13,25 @@ function _walk(node, parent, callback, options) {
 function UI(root, canvas) {
   const ctx = canvas.getContext("2d");
 
+  function walk(callback) {
+    const boundingBox = {
+      topLeft: {x: 0, y: 0},
+      size: {width: canvas.width, height: canvas.height}};
+    _walk(root, null, function(node, parent, options) {
+        const p = parent.positionOf(node, options.boundingBox);
+        callback(node, p);
+      }, {boundingBox: boundingBox});
+  };
+
   this.render = function() {
     // Clear with background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "gray";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const boundingBox = {
-      topLeft: {x: 0, y: 0},
-      size: {width: canvas.width, height: canvas.height}};
-    _walk(root, null, function(node, parent, options) {
-      if (node.draw) {
-        const p = parent.positionOf(node, options.boundingBox);
-        node.draw(ctx, p);
-      }
-    }, {boundingBox: boundingBox});
+    
+    walk(function(node, p) {
+      node.draw(ctx, p);
+    });
   };
 }
 
