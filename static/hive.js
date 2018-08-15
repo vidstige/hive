@@ -138,7 +138,9 @@ function drawHexagon(ctx, x, y, size) {
 function drawTile(ctx, x, y, size, padding, player, tile) {
   ctx.fillStyle = player;
   drawHexagon(ctx, x, y, size - padding);
-  ctx.drawImage(images[tile], x - size/2, y - size/2, size, size);
+  if (tile) {
+    ctx.drawImage(images[tile], x - size/2, y - size/2, size, size);
+  }
 }
 
 // GridXY - Container where you specify item locations with x, y
@@ -190,7 +192,9 @@ function HexButton(size, color, tile) {
   this.draw = function(ctx, position) {
     const {x, y} = position;
     if (this.enabled) {
-      drawTile(ctx, x, y, size, 0, "purple", tile);
+      //drawTile(ctx, x, y, size, 0, "purple", tile);
+      ctx.fillStyle = "purple";
+      drawHexagon(ctx, x, y, size);
     }
     drawTile(ctx, x, y, size, padding, color, tile);
   };
@@ -208,22 +212,22 @@ function eq(a, b) {
 }
 
 function AvailableMoves(state) {
-  const moves = [];
-  const placements = [];
+  this.moves = [];
+  this.placements = [];
   for (const move_str of state.available_moves) {
     const [action, arg1, arg2] = move_str.split("|");
     if (action == "move") {
-      moves.push({from: parse_cube(arg1), to: parse_cube(arg2)});
+      this.moves.push({from: parse_cube(arg1), to: parse_cube(arg2)});
     }
     if (action == "place") {
-      placements.push({tile: arg1, at: parse_cube(arg2)});
+      this.placements.push({tile: arg1, at: parse_cube(arg2)});
     }
   }
   this.moveTargetsFrom = function(coordinate) {
-    return moves.filter(function(move) { return eq(move.from, coordinate); });
+    return this.moves.filter(function(move) { return eq(move.from, coordinate); });
   };
   this.placeTargetsFor = function(tile) {
-    return placements
+    return this.placements
       .filter(function(p) { return p.tile == tile; })
       .map(function(p) { return p.at; });
   };
@@ -241,6 +245,17 @@ function createGrid(state) {
     button.dragTargets = moves.moveTargetsFrom(cube);
     button.enabled = button.dragTargets.length > 0;
     grid.add(cube, button);
+  }
+  // TODO: This will create duped locations
+  // TODO: Where you can both move a piece and place a piece
+  // TODO: But in the end it doesn't really matter
+  for (var i = 0; i < moves.moves.length; i++) {
+    const button = new HexButton(size, "rgba(0, 0, 180, 0.5)", null);
+    grid.add(moves.moves[i].to, button);
+  }
+  for (var i = 0; i < moves.placements.length; i++) {
+    const button = new HexButton(size, "rgba(180, 0, 0, 0.5)", null);
+    grid.add(moves.placements[i].at, button);    
   }
   return grid;
 }
