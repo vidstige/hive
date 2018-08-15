@@ -1,7 +1,15 @@
 // UI Framework
+function getItems(node) {
+  const items = node.items;
+  if (typeof items === 'function') {
+    return items();
+  }
+  return items;
+}
+
 function _walk(node, parent, callback, options) {
   if (node.items) {
-    const items = node.items;
+    const items = getItems(node)
     for (var i = 0; i < items.length; i++) {
       _walk(items[i], node, callback, options);
     }
@@ -161,19 +169,27 @@ function GridXY() {
 // Layouts items in hex grid using cube coordinates
 function HexGrid(size) {
   this._id = _id++;
-  this.items = [];
-  const positions = {};
+  this._items = {};
+  const self = this;
   this.add = function(p, item) {
-    this.items.push(item);
-    positions[item._id] = p;
+    self._items[JSON.stringify(p)] = item;
+  };
+  this.items = function() {
+    return Object.values(self._items);
   };
   this.positionOf = function(item, boundingBox) {
-    const cube = positions[item._id];
-    const p = cube_to_xy(cube, size);
-    return center(p, boundingBox.size);
+    for (const [coordinate_str, i] of Object.entries(self._items)) {
+      if (i._id == item._id) {
+        const p = cube_to_xy(JSON.parse(coordinate_str), size);
+        return center(p, boundingBox.size);
+      }
+    }
+    console.log("oops");
+    // No such item
   };
   this.lookup = function(p) {
-    return p; // TODO: Actuall lookup here
+    //return self._items[JSON.stringify(p)];
+    return p;
   };
 }
 
