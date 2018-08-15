@@ -172,6 +172,9 @@ function HexGrid(size) {
     const p = cube_to_xy(cube, size);
     return center(p, boundingBox.size);
   };
+  this.lookup = function(p) {
+    return p; // TODO: Actuall lookup here
+  };
 }
 
 function Label(text, font) {
@@ -260,7 +263,7 @@ function createGrid(state) {
   return grid;
 }
 
-function createHand(state) {
+function createHand(state, hexGrid) {
   const size = 20;
   const x = size * 2;
   var y = size * 2;
@@ -282,7 +285,7 @@ function createHand(state) {
 
   const moves = new AvailableMoves(state);
   for (const [tile, button] of Object.entries(map[state.current])) {
-    button.dragTargets = moves.placeTargetsFor(tile);
+    button.dragTargets = moves.placeTargetsFor(tile).map(hexGrid.lookup);
     button.enabled = button.dragTargets.length > 0;
   }
   return grid;
@@ -313,11 +316,9 @@ function HiveUI() {
   const canvas = document.getElementById('target');
 
   this.update = function(state) {
-    const ui = new UI(
-      {items: [
-        createHand(state),
-        createGrid(state)
-      ]}, canvas);
+    const gridView = createGrid(state);
+    const handView = createHand(state, gridView);
+    const ui = new UI({items: [ handView, gridView ]}, canvas);
     ui.render();
   };
   
