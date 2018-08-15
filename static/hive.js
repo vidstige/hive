@@ -172,6 +172,7 @@ function HexGrid(size) {
   this._items = {};
   const self = this;
   this.add = function(p, item) {
+    if (!item) console.warn("Bad item");
     self._items[JSON.stringify(p)] = item;
   };
   this.items = function() {
@@ -184,12 +185,12 @@ function HexGrid(size) {
         return center(p, boundingBox.size);
       }
     }
-    console.log("oops");
-    // No such item
+    console.error("No such item!");
   };
   this.lookup = function(p) {
-    //return self._items[JSON.stringify(p)];
-    return p;
+    const key = JSON.stringify(p);
+    if (!key in self._items) console.warn("No such key", p);
+    return self._items[key];
   };
 }
 
@@ -243,7 +244,9 @@ function AvailableMoves(state) {
     }
   }
   this.moveTargetsFrom = function(coordinate) {
-    return this.moves.filter(function(move) { return eq(move.from, coordinate); });
+    return this.moves
+      .filter(function(move) { return eq(move.from, coordinate); })
+      .map(function(move) { return move.to; });
   };
   this.placeTargetsFor = function(tile) {
     return this.placements
@@ -257,14 +260,7 @@ function createGrid(state) {
   const moves = new AvailableMoves(state);
   const size = 40;
   const grid = new HexGrid(size);
-  for (const [coordinate_str, value] of Object.entries(state.grid)) {
-    const cube = parse_cube(coordinate_str);
-    const [player, tile] = value.split(" ");
-    const button = new HexButton(size, player, tile);
-    button.dragTargets = moves.moveTargetsFrom(cube);
-    button.enabled = button.dragTargets.length > 0;
-    grid.add(cube, button);
-  }
+
   // TODO: This will create duped locations
   // TODO: Where you can both move a piece and place a piece
   // TODO: But in the end it doesn't really matter
@@ -275,6 +271,15 @@ function createGrid(state) {
   for (var i = 0; i < moves.placements.length; i++) {
     const button = new HexButton(size, "rgba(180, 0, 0, 0.5)", null);
     grid.add(moves.placements[i].at, button);    
+  }
+
+  for (const [coordinate_str, value] of Object.entries(state.grid)) {
+    const cube = parse_cube(coordinate_str);
+    const [player, tile] = value.split(" ");
+    const button = new HexButton(size, player, tile);
+    button.dragTargets = moves.moveTargetsFrom(cube).map(grid.lookup);
+    button.enabled = button.dragTargets.length > 0;
+    grid.add(cube, button);
   }
   return grid;
 }
