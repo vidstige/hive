@@ -19,8 +19,9 @@ function _walk(node, parent, callback, options) {
 }
 
 function UI(root, canvas) {
+  const self = this;
   const ctx = canvas.getContext("2d");
-
+  
   function walk(callback) {
     const boundingBox = {
       topLeft: {x: 0, y: 0},
@@ -31,18 +32,35 @@ function UI(root, canvas) {
       }, {boundingBox: boundingBox});
   };
 
+  var drag = null;
   this.mousedown = function(e) {
     walk(function(node, p) {
-      if (node.contains(p, mouse(e)) && node.enabled) {
-        const targets = node.dragTargets;
-        if (targets) {
-          console.log(targets);
+      const m = mouse(e);
+      if (node.contains(p, m) && node.enabled) {
+        if (node.startDrag) {
+          drag = {
+            from: minus(p, m),
+            item: node.startDrag()
+          }
         }
       }
     });
   };
 
   this.mousemove = function(e) {
+    if (drag) {
+      self.render();
+      drag.item.draw(ctx, plus(mouse(e), drag.from));
+    }
+  };
+
+  this.mouseup = function(e) {
+    if (drag) {
+      if (drag.item.startDrag) {
+        drag.item.endDrag(drag.item);
+      }
+    }
+    drag = null;
   };
   
   canvas.onmousedown = this.mousedown;
@@ -175,6 +193,11 @@ function HexGrid(size) {
     if (!item) console.warn("Bad item");
     self._items[JSON.stringify(p)] = item;
   };
+  this.remove = function(item) {
+    const p = Object.keys(self._items).find(key => self._items[key]._id === item._id);
+    delete self._items[p];
+    return p;
+  };
   this.items = function() {
     return Object.values(self._items);
   };
@@ -223,6 +246,12 @@ function HexButton(size, color, tile) {
   };
 }
 
+function minus(a, b) {
+  return {x: a.x - b.x, y: a.y - b.y};
+}
+function plus(a, b) {
+  return {x: a.x + b.x, y: a.y + b.y};
+}
 function center(p, container) {
   return {x: container.width/2 + p.x, y: container.height/2 + p.y};
 }
@@ -261,9 +290,6 @@ function createGrid(state) {
   const size = 40;
   const grid = new HexGrid(size);
 
-  // TODO: This will create duped locations
-  // TODO: Where you can both move a piece and place a piece
-  // TODO: But in the end it doesn't really matter
   for (var i = 0; i < moves.moves.length; i++) {
     const button = new HexButton(size, "rgba(0, 0, 180, 0.5)", null);
     grid.add(moves.moves[i].to, button);
@@ -273,12 +299,24 @@ function createGrid(state) {
     grid.add(moves.placements[i].at, button);    
   }
 
+  const dragTile = function() {
+    const source = this;
+    const p = grid.remove(source);
+    return source;
+  };
+
+  const replaceTile = function(item) {
+    //grid.add()
+  };
+
   for (const [coordinate_str, value] of Object.entries(state.grid)) {
     const cube = parse_cube(coordinate_str);
     const [player, tile] = value.split(" ");
     const button = new HexButton(size, player, tile);
     button.dragTargets = moves.moveTargetsFrom(cube).map(grid.lookup);
     button.enabled = button.dragTargets.length > 0;
+    button.startDrag = dragTile;
+    button.endDrag = replaceTile;
     grid.add(cube, button);
   }
   return grid;
@@ -308,6 +346,7 @@ function createHand(state, hexGrid) {
   for (const [tile, button] of Object.entries(map[state.current])) {
     button.dragTargets = moves.placeTargetsFor(tile).map(hexGrid.lookup);
     button.enabled = button.dragTargets.length > 0;
+    //button.startDrag = dragTile;
   }
   return grid;
 }
