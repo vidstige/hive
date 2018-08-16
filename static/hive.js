@@ -37,11 +37,16 @@ function UI(root, canvas) {
     walk(function(node, p) {
       const m = mouse(e);
       if (node.contains(p, m) && node.enabled) {
-        if (node.startDrag) {
+        if (node.dragTargets) {
           drag = {
             from: minus(p, m),
-            item: node.startDrag()
+            item: node
           }
+
+          for (var i = 0; i < node.dragTargets.length; i++) {
+            node.dragTargets[i].enabled = true;
+          }
+          node.visible = false;
         }
       }
     });
@@ -56,10 +61,11 @@ function UI(root, canvas) {
 
   this.mouseup = function(e) {
     if (drag) {
-      if (drag.item.startDrag) {
-        drag.item.endDrag(drag.item);
-        self.render();
+      drag.item.visible = true;
+      for (var i = 0; i < drag.item.dragTargets.length; i++) {
+        drag.item.dragTargets[i].enabled = false;
       }
+      self.render();
     }
     drag = null;
   };
@@ -287,22 +293,6 @@ function AvailableMoves(state) {
   };
 }
 
-function startDragTile() {
-  const source = this;
-  source.visible = false;
-  for (var i = 0; i < source.dragTargets.length; i++) {
-    source.dragTargets[i].enabled = true;
-  }
-  return source;
-}
-
-function endDragTile(item) {
-  item.visible = true;
-  for (var i = 0; i < item.dragTargets.length; i++) {
-    item.dragTargets[i].enabled = false;
-  }
-}
-
 // The UI
 function createGrid(state) {
   const moves = new AvailableMoves(state);
@@ -324,8 +314,6 @@ function createGrid(state) {
     const button = new HexButton(size, player, tile);
     button.dragTargets = moves.moveTargetsFrom(cube).map(grid.lookup);
     button.enabled = button.dragTargets.length > 0;
-    button.startDrag = startDragTile;
-    button.endDrag = endDragTile;
     grid.add(cube, button);
   }
   return grid;
