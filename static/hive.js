@@ -65,6 +65,20 @@ function UI(root, canvas) {
       for (var i = 0; i < drag.item.dragTargets.length; i++) {
         drag.item.dragTargets[i].enabled = false;
       }
+
+      // Check if dropped on any target
+      const m = mouse(e);
+      walk(function(node, p) {
+        if (node.contains(p, m)) {
+          for (var i = 0; i < drag.item.dragTargets.length; i++) {
+            const dragTarget = drag.item.dragTargets[i];
+            if (node._id == dragTarget._id) {
+              drag.item.draggedTo(dragTarget);
+            }
+          }
+        }
+      });
+
       self.render();
     }
     drag = null;
@@ -238,6 +252,7 @@ function HexButton(size, color, tile) {
   // This stuff should be in a base class
   this._id = _id++;
   this.visible = true;
+  this.tile = tile;
 
   const padding = 2;
 
@@ -301,11 +316,13 @@ function createGrid(state) {
 
   for (var i = 0; i < moves.moves.length; i++) {
     const button = new HexButton(size, "transparent", null);
-    grid.add(moves.moves[i].to, button);
+    button.cube = moves.moves[i].to;
+    grid.add(button.cube, button);
   }
   for (var i = 0; i < moves.placements.length; i++) {
     const button = new HexButton(size, "transparent", null);
-    grid.add(moves.placements[i].at, button);    
+    button.cube = moves.placements[i].at;
+    grid.add(button.cube, button);    
   }
 
   for (const [coordinate_str, value] of Object.entries(state.grid)) {
@@ -313,7 +330,9 @@ function createGrid(state) {
     const [player, tile] = value.split(" ");
     const button = new HexButton(size, player, tile);
     button.dragTargets = moves.moveTargetsFrom(cube).map(grid.lookup);
+    button.draggedTo = function(target) { console.log(this.cube, target.cube) };
     button.enabled = button.dragTargets.length > 0;
+    button.cube = cube;
     grid.add(cube, button);
   }
   return grid;
@@ -343,7 +362,7 @@ function createHand(state, hexGrid) {
   for (const [tile, button] of Object.entries(map[state.current])) {
     button.dragTargets = moves.placeTargetsFor(tile).map(hexGrid.lookup);
     button.enabled = button.dragTargets.length > 0;
-    //button.startDrag = dragTile;
+    button.draggedTo = function(target) { console.log(this.tile, target.cube);};
   }
   return grid;
 }
