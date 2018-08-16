@@ -287,13 +287,13 @@ function eq(a, b) {
 function AvailableMoves(state) {
   this.moves = [];
   this.placements = [];
-  for (const move_str of state.available_moves) {
-    const [action, arg1, arg2] = move_str.split("|");
+  for (var i = 0; i < state.available_moves.length; i++) {
+    const [action, arg1, arg2] = state.available_moves[i].split("|");
     if (action == "move") {
-      this.moves.push({from: parse_cube(arg1), to: parse_cube(arg2)});
+      this.moves.push({from: parse_cube(arg1), to: parse_cube(arg2), index: i});
     }
     if (action == "place") {
-      this.placements.push({tile: arg1, at: parse_cube(arg2)});
+      this.placements.push({tile: arg1, at: parse_cube(arg2), index: i});
     }
   }
   this.moveTargetsFrom = function(coordinate) {
@@ -306,10 +306,29 @@ function AvailableMoves(state) {
       .filter(function(p) { return p.tile == tile; })
       .map(function(p) { return p.at; });
   };
+  this.find = function(action, arg1, arg2) {
+    if (action == "move") {
+      for (var i = 0; i < this.moves.length; i++) {
+        const m = this.moves[i];
+        if (eq(arg1, m.from) && eq(arg2, m.to)) {
+          return m.index;
+        }
+      }
+    }
+    if (action == "place") {
+      for (var i = 0; i < this.placements.length; i++) {
+        const p = this.placements[i];
+        if (eq(arg1, p.tile) && eq(arg2, p.at)) {
+          return p.index;
+        }
+      }
+    }
+    console.error("unknown action", action);
+  };
 }
 
 // The UI
-function createGrid(state) {
+function createGrid(state, doMove) {
   const moves = new AvailableMoves(state);
   const size = 40;
   const grid = new HexGrid(size);
@@ -330,7 +349,7 @@ function createGrid(state) {
     const [player, tile] = value.split(" ");
     const button = new HexButton(size, player, tile);
     button.dragTargets = moves.moveTargetsFrom(cube).map(grid.lookup);
-    button.draggedTo = function(target) { console.log(this.cube, target.cube) };
+    button.draggedTo = function(target) { doMove(state, 'move', this.cube, target.cube); };
     button.enabled = button.dragTargets.length > 0;
     button.cube = cube;
     grid.add(cube, button);
@@ -338,7 +357,7 @@ function createGrid(state) {
   return grid;
 }
 
-function createHand(state, hexGrid) {
+function createHand(state, hexGrid, doMove) {
   const size = 20;
   const x = size * 2;
   var y = size * 2;
@@ -362,7 +381,7 @@ function createHand(state, hexGrid) {
   for (const [tile, button] of Object.entries(map[state.current])) {
     button.dragTargets = moves.placeTargetsFor(tile).map(hexGrid.lookup);
     button.enabled = button.dragTargets.length > 0;
-    button.draggedTo = function(target) { console.log(this.tile, target.cube);};
+    button.draggedTo = function(target) { doMove(state, 'place', this.tile, target.cube); };
   }
   return grid;
 }
@@ -391,16 +410,24 @@ function HiveUI() {
   const self = this;
   const canvas = document.getElementById('target');
 
+  doMove = function(state, action, arg1, arg2) {
+    // TODO: Update local UI to avoid flicker
+    // Send move to server
+    const moves = new AvailableMoves(state);
+    const index = moves.find(action, arg1, arg2);
+    postJson('/api/do', {index}).then(self.update);
+  };
+
   this.update = function(state) {
-    const gridView = createGrid(state);
-    const handView = createHand(state, gridView);
+    const gridView = createGrid(state, doMove);
+    const handView = createHand(state, gridView, doMove);
     const ui = new UI({items: [ handView, gridView ]}, canvas);
     ui.render();
   };
   
   this.newGame = function () {
     const seed = document.getElementById('seed').value;
-    postJson('/api/new', {seed}).then(self.update);      
+    postJson('/api/new', {seed}).then(self.update);
   };
   
   this.evaluate = function() {

@@ -43,6 +43,14 @@ def new_game():
     state = hive.State()
     return send_state()
 
+@app.route('/api/do', methods=("POST",))
+def move():
+    index = int(request.get_json()['index'])
+    the_moves = list(hive.available_moves(state))
+    move = the_moves[index]
+    state.do(move)
+    return send_state()
+
 @app.route('/api/evaluation')
 def evaluation():
     return jsonify(hive.evaluate(state, state.player()))
