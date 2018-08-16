@@ -290,11 +290,17 @@ function AvailableMoves(state) {
 function startDragTile() {
   const source = this;
   source.visible = false;
+  for (var i = 0; i < source.dragTargets.length; i++) {
+    source.dragTargets[i].enabled = true;
+  }
   return source;
 }
 
 function endDragTile(item) {
   item.visible = true;
+  for (var i = 0; i < item.dragTargets.length; i++) {
+    item.dragTargets[i].enabled = false;
+  }
 }
 
 // The UI
@@ -304,11 +310,11 @@ function createGrid(state) {
   const grid = new HexGrid(size);
 
   for (var i = 0; i < moves.moves.length; i++) {
-    const button = new HexButton(size, "rgba(0, 0, 180, 0.5)", null);
+    const button = new HexButton(size, "transparent", null);
     grid.add(moves.moves[i].to, button);
   }
   for (var i = 0; i < moves.placements.length; i++) {
-    const button = new HexButton(size, "rgba(180, 0, 0, 0.5)", null);
+    const button = new HexButton(size, "transparent", null);
     grid.add(moves.placements[i].at, button);    
   }
 
