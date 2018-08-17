@@ -10,11 +10,14 @@ Basic AI using minmax search.
     pip install -r requirements.txt
     ./run.sh
 
-My personal TODO
-- [ ] Beetle movement 
-- [ ] Manual UI
-  - [ ] Click hexes on canvas
-  - [ ] Display available moves
+## Docker
+Can be run inside a container. First build the image
+
+    docker build --tag hive .
+
+Then run the image in a container, for example like so
+
+    docker run --rm --publish 8000:8000 hive
 
 ## Author
 Samuel Carlsson
