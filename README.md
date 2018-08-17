@@ -5,7 +5,8 @@ Featuring hot graphics I bought over at iconfinder.com for $8.
 
 Basic AI using minmax search.
 
-
+![Screenshot of this software](screenshots/1.png "Screenshot 1")
+_Current code in action. Very rudamentary UI._
 
 ## Running
 
